@@ -1,0 +1,133 @@
+---
+title: R para análisis de datos
+author:
+  - name: "{{< var instructor.name >}}"
+    email: "{{< var instructor.email >}}"
+    affiliations:
+      - name: "{{< var instructor.institution >}}"
+date: 2026-08-31
+date-modified: last-modified
+date-format: iso
+output-file: index
+format: 
+  html:
+    toc: true
+    number-sections: true
+    embed-resources: true
+  pdf:
+    number-sections: true
+lang: es
+bibliography: r-clio.bib
+---
+
+```{=html}
+<style>
+  p { 
+    text-align: justify;
+  }
+</style>
+```
+
+# Instructor, horario encuentros virtuales, asistencia y grabaciones
+
+- **Nombre**:
+
+  - {{< var instructor.name >}}
+
+- **Correo**:
+
+  - [{{< var instructor.email >}}](mailto:{{< var instructor.email >}})
+
+    En caso que se requiera de asistencia técnica es posible por este medio fijar un horario para tener un encuentro virtual sincrónico o si se requiere dejar constancia de alguna situación, compartir una duda o algún aspecto relacionado con el desarrollo del curso.
+
+- **Celular**:
+
+  - {{< var instructor.cellphone >}}
+
+    En caso que se requiera de manera urgente tratar un tema relacionado con el curso utilizar este medio para contactar directamente al instructor. No enviar mensajes de whatsapp.
+
+- **Encuentros virtuales**
+
+  - Dia: Viernes
+  - Horario: 13:00 - 16:00
+  - Vínculo de ingreso: [{{< var course.link >}}]({{< var course.link >}})
+
+    Es necesario ingresar con el correo institucional personal. De lo contrario no se podrá ingresar con otro correo personal o con un correo externo a la universidad.
+
+    Adicionalmente para que sea válida la asistencia y esta se tenga en cuenta se requiere que el correo institucional sea personal (p. ej. luis.gomezl\@unimilitar.edu.co) y no perteneciente al dominio de una dependencia de la universidad (p. ej. admon.distancia\@unimilitar.edu.co) 
+
+- **Asistencia**
+
+  - Por direccionamiento del [Centro de excelencia profesoral](https://umng.edu.co/centro/excelencia-profesoral/) se requiere como mínimo tener una asistencia válida del 80\% para generar el certificado por parte de este centro donde se tomará por defecto el seguimiento de asistencia que realiza google meet de manera automática respecto la información relacionada con nombre, apellido, correo electrónico, duración, hora a la que se unió y hora a la que se salió de cada participante con su correo institucional personal de cada encuentro virtual.
+
+  - Adicionalmente se requerirá la interacción con los integrantes que asistan a los encuentros virtuales incluído el tutor para generar una dinámica constante en las sesiones sincrónicas.
+
+- **Grabaciones**
+
+  - Los encuentros virtuales serán grabados y subidos a youtube en [Curso R para análisis de datos 2026-2](https://www.youtube.com/playlist?list=PLeM6qo2XF_C8) de manera permanente para que se puedan revisar en caso que se requiera por parte de los participantes del curso y el público en general.
+
+# Presentación del curso
+
+## Información general
+
+El curso **R para análisis de datos** tiene como objetivo introducir a los participantes al uso de [R](https://www.r-project.org/) a través del entorno integrado de desarrollo [Positron](https://positron.posit.co/welcome.html) para realizar análisis de datos y comunicar los resultados utilizando [Quarto](https://quarto.org/).
+
+## Información específica
+
+El curso busca introducir a los participantes al uso de R para análisis de datos utilizando Positron como entorno integrado de desarrollo y Quarto, para comunicar resultados con el propósito de tener un flujo de trabajo más [reproducible](https://carpentries-incubator.github.io/reproducible-publications-quarto/01-introduction.html).
+
+El curso no está enfocado en profundizar temas relacionados con estadística inferencial o descriptiva donde el objetivo es introducir diferentes herramientas utilizando el lenguaje de programación R para conocer como visualizar, manipular, organizar, limpiar e importar datos
+para luego comunicar resultados.
+
+Adicionalmente no se requiere experiencia previa en programación donde el propósito es utilizar en general la colección de paquetes tidyverse utilizando un conjunto de principios unificados para realizar análisis de datos.
+
+Para el desarrollo del curso se realizarán encuentros virtuales semanales de 3 horas donde se requiere adicionalmente asignar mínimo 3 horas semanales adicionales de trabajo individual para practicar los temas desarrollados en los encuentros virtuales.
+
+## Contenidos a desarrollar
+
+| Tema a desarrollar | Sesión | Fecha |
+| :--- | :---: | :---: |
+| Primeros pasos con R | 1 | 2026-09-04 |
+| Visualización de datos | 2 | 2026-09-11 |
+| Visualización de datos | 3 | 2026-09-18 |
+| Manipulación de datos | 4 | 2026-09-25 |
+| Manipulación de datos | 5 | 2026-10-02 |
+| Importación de datos | 6 | 2026-10-09 |
+| Importación de datos | 7 | 2026-10-16 |
+| Organización y limpieza de datos | 8 | 2026-10-23 |
+| Organización y limpieza de datos | 9 | 2026-10-30 |
+| Programación funcional | 10 | 2026-11-06 |
+| Programación funcional | 11 | 2026-11-13 |
+| Comunicación con Quarto | 12 | 2026-11-20 |
+| Comunicación con Quarto | 13 | 2026-11-27 |
+
+: Temáticas a desarrollar en el curso {#tbl-topics-course .striped .hover}
+
+## Material principal
+
+El curso utilizará como material principal [@gomez_lopez_r_2026] para desarrollar las temáticas del curso señaladas en la @tbl-topics-course.
+
+Siguiendo la filosofía de [ciencia abierta](https://en.wikipedia.org/wiki/Open_science) el acceso a este material es libre y siempre será libre, bajo los términos de la licencia [CC BY-NC 4.0](https://github.com/luifrancgom/r-clio?tab=License-1-ov-file). 
+
+Adicionalmente el código fuente utilizado para construir el material estará siempre disponible en un repositorio de [GitHub](https://github.com/luifrancgom/r-clio) para que pueda ser consultado por los participantes del curso y el público en general.
+
+El material puede ser consultado en los siguientes formatos donde estará actualizándose de manera contínua:
+
+- [HTML](https://luifrancgom.github.io/r-clio/)
+- [PDF](https://luifrancgom.github.io/r-clio/R-para-an%C3%A1lisis-de-datos.pdf)
+
+## Software
+
+El software libre que se utilizará en el curso es:
+
+- R
+- Positron
+- Quarto
+
+Para instalar el software de manera local en caso que no se tenga consultar [@@gomez_lopez_r_2026] respecto al [Capítulo 2](https://luifrancgom.github.io/r-clio/welcome_to_r.html)
+
+**Nota 1**: No se requiere instalar Quarto dado que éste software [está incluido dentro de Positron por defecto](https://positron.posit.co/quarto.html).
+**Nota 2**: En caso que se tenga instalado R asegurarse que se tenga instalada la versión 4.2 o una superior.
+
+
+## Rererencias
