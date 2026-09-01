@@ -18,6 +18,10 @@ format:
     number-sections: true
     colorlinks: true
     link-citations: true
+  docx:
+    number-sections: true
+  odt:
+    number-sections: true
 lang: es
 bibliography: r-clio.bib
 ---
