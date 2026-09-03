@@ -16,6 +16,8 @@ format:
   presentation-umng-revealjs:
     logo-vertical-strip: images/logos/logo-white-vertical.png
     embed-resources: true
+    resources: 
+      - "!images/**"
 date: last-modified
 date-format: iso
 lang: es
