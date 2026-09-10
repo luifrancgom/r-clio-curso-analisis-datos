@@ -27,6 +27,23 @@ bibliography: ../references/r-clio.bib
 library(tidyverse)
 ```
 
+# Preliminares
+
+## {.smaller .center}
+
+::: {.incremental}
+- Descargar datos: `2021-2024_saber-pro-genericas_faedis.rds`
+- Generar carpetas:
+
+  - `data`
+
+    - Agregar `2021-2024_saber-pro-genericas_faedis.rds`
+
+  - `006_visualizar-cantidades-en-r`
+
+    - Crear archivo `001_visualizar-cantidades-datos-faedis.R`
+:::
+
 # Gramática de gráficos en capas
 
 ## {.nostretch .center}
@@ -46,18 +63,311 @@ Figuras clave en la gramática de gráficos
 ::: {#fig-rhino layout-ncol=2}
 ![Resulto final](../images/rhino.png){#fig-final-result height="410px"}
 
-![Proceso paso por paso](../images/rhino-drawing-step-by-step.png){#fig-step-by-step height="410px"}
+![Proceso paso por paso](../images/rhino-drawing-step-by-step.png){.fragment .lightbox #fig-step-by-step height="410px"}
 
 Dibujando un rinoceronte paso a paso [@khayrullin_how_2026-1]
 :::
 
-## {.nostretch}
+## {.nostretch .smaller .center}
 
-![Modelo mental de la gramática de gráficos en capas](../images/mental-model-layered-grammar-graphics.png){#fig-mental-model-lgog}
+:::: {.columns}
+
+::: {.column width="50%"}
+![Modelo mental de la gramática de gráficos en capas](../images/mental-model-layered-grammar-graphics.png){.lightbox #fig-mental-model-lgog}
+:::
+
+::: {.column .fragment width="50%"}
+- `ggplot2` requiere como mínimo 3 componentes: 
+
+  - Datos: insumo principal.
+  - Mapeo: mapear variables de los datos a propiedades visuales denominadas **atributos estéticos** (ver @fig-aesthetics-attributes).
+  - Capas: toma los datos mapeados y los transforma en una presentación visual
+
+    - **geometría**
+    - **transformación estadística**
+    - **ajuste de posición**
+
+- Los demás elementos restantes cuentan con valores predeterminados.
+:::
+
+::::
+
+## {.nostretch .center}
+
+![Ejemplos de atributos estéticos](../images/aesthetics-attributes.png){#fig-aesthetics-attributes}
 
 # Gráfico de barras mediante conteo automático
 
 ##
+
+```{r}
+#| label: fig-1-chap-6
+#| fig-cap: Resultado final de un gráfico de barras utilizando `ggplot2`
+#| fig-height: 5.5
+#| echo: false
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = fct_rev(fct_infreq(estu_prgm_academico)))
+) +
+  geom_bar() +
+  scale_y_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Número de inscritos",
+    y = NULL,
+    title = "Inscritos Saber Pro por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+
+## Datos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+::::
+
+## "Lienzo" {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| echo: true
+# Visualizar ----
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024
+)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: fig-init-obj-ggplot
+#| fig-cap: Inicialización de un objeto `ggplot`
+#| lightbox: true
+ggplot(data = saber_pro_genericas_faedis_2021_2024)
+```
+:::
+::::
+
+## Mapeo {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+)
+```
+:::
+
+::: {.column width="50%"}
+
+- ¿Por qué no utilizando la coordenada `x`?
+
+```{r}
+#| label: fig-map-aes-y
+#| fig-cap:  Mapeo de datos hacia atributos estéticos utilizando la coordenada `y`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+)
+```
+:::
+::::
+
+## Capas {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|5|10|18-21|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+) +
+  geom_bar()
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_infreq(estu_prgm_academico)
+  )
+) +
+  geom_bar()
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_rev(
+      fct_infreq(estu_prgm_academico)
+    )
+  )
+) +
+  geom_bar()
+```
+:::
+
+::: {.column width="50%"}
+
+- Geometrías[^1]
+
+```{r}
+#| label: fig-geom-bar
+#| fig-cap: Uso de una geometría para ilustrar gráficamente datos a través de un atributo estético
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_rev(fct_infreq(estu_prgm_academico))
+  )
+) +
+  geom_bar()
+```
+:::
+::::
+
+[^1]: No utilizaremos por ahora transformaciones estadísticas y ajustes de posición
+
+## Escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|10-12|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_rev(
+      fct_infreq(estu_prgm_academico)
+    )
+  )
+) +
+  geom_bar() +
+  scale_y_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: fig-scale-y-discrete
+#| fig-cap: Uso de una escala para modificar las etiquetas en la coordenada `y`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = fct_rev(fct_infreq(estu_prgm_academico)))
+) +
+  geom_bar() +
+  scale_y_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+::::
+
+## Escalas {.smaller}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|13-19|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_rev(
+      fct_infreq(estu_prgm_academico)
+    )
+  )
+) +
+  geom_bar() +
+  scale_y_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Número de inscritos",
+    y = NULL,
+    title = "Inscritos Saber Pro por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+
+::: {.column width="50%"}
+
+- Etiquetas
+```{r}
+#| label: fig-scale-labs
+#| fig-cap: Uso de la función `labs()` para agregar, modificar o eliminar etiquetas en un gráfico 
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_rev(
+      fct_infreq(estu_prgm_academico)
+    )
+  )
+) +
+  geom_bar() +
+  scale_y_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Número de inscritos",
+    y = NULL,
+    title = "Inscritos Saber Pro por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+::::
 
 # Histograma
 
