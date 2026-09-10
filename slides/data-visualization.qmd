@@ -1,0 +1,70 @@
+---
+title: Visualización de datos
+subtitle: Sesión 1
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+library(tidyverse)
+```
+
+# Gramática de gráficos en capas
+
+## {.nostretch .center}
+
+::: {#fig-gog-developers layout-ncol=3}
+![Leland Wilkinson - Gramática de gráficos [@wilkinson_grammar_2005]](../images/leland-wilkinson.png){#fig-leland-wilkinson height="370px"}
+
+![Hadley Wickham - Implementación en R (`ggplot2`)](../images/hadley-wickham.png){#fig-hadley-wickham height="370px"}
+
+![Hassan Kibirige - Implementación en Python (`plotnine`)](../images/hassan-kibirige.png){#fig-hassan-kibirige height="370px"}
+
+Figuras clave en la gramática de gráficos
+:::
+
+## {.nostretch}
+
+::: {#fig-rhino layout-ncol=2}
+![Resulto final](../images/rhino.png){#fig-final-result height="410px"}
+
+![Proceso paso por paso](../images/rhino-drawing-step-by-step.png){#fig-step-by-step height="410px"}
+
+Dibujando un rinoceronte paso a paso [@khayrullin_how_2026-1]
+:::
+
+## {.nostretch}
+
+![Modelo mental de la gramática de gráficos en capas](../images/mental-model-layered-grammar-graphics.png){#fig-mental-model-lgog}
+
+# Gráfico de barras mediante conteo automático
+
+##
+
+# Histograma
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
