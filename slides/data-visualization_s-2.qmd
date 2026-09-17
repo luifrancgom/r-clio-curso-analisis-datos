@@ -1,0 +1,1436 @@
+---
+title: Visualización de datos
+subtitle: Sesión 2
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+library(tidyverse)
+library(scales)
+library(tidymodels)
+library(gt)
+```
+
+# Preliminares
+
+## {.smaller}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿`2021-2024_saber-pro-genericas_faedis.rds` se encuentra dentro de la carpeta `data`?
+
+- Generar carpetas:
+
+  - `008_visualizar-proporciones-en-r`
+
+    - Crear archivo `001_visualizar-proporciones-datos-faedis.R`
+
+  - `009_visualizar-relaciones-x-y-en-r`
+
+    - Crear archivo `001_visualizar-relaciones-x-y-datos-faedis.R`
+
+- Descargar datos: `2021-2024_saber-pro-genericas_faedis_programas.rds`
+
+  - Agregar en `data`
+:::
+
+# Gráfico de barras apiladas y normalizadas
+
+##
+
+```{r}
+#| label: fig-proportions
+#| fig-cap: Resultado final de un gráfico de barras apiladas y normalizadas en el rango $[0,1]$ utilizando `ggplot2`
+#| fig-height: 5.5
+#| echo: false
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  ) +
+  labs(
+    x = "Porcentaje de inscritos",
+    y = NULL,
+    fill = "Género",
+    title = str_wrap(
+      "Proporción inscritos Saber Pro por género y programa en FAEDIS",
+      width = 50
+    ),
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+## Datos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-3|5-8|10-11|"
+# Cargar paquetes ----
+library(tidyverse)
+library(scales)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+::::
+
+## Datos y mapeo {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+)
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-data-map-aes-y
+#| fig-cap: Inicialización de un objeto `ggplot` y mapeo de datos hacia atributos estéticos utilizando la coordenada `y`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+)
+```
+:::
+::::
+
+## Capas y escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|5|6|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+) +
+  geom_bar(mapping = aes(fill = estu_genero)) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-geom-bar-scale-y-discrete
+#| fig-cap: Uso de una geometría para ilustrar gráficamente datos a través de un atributo estético y una escala para modificar las etiquetas en la coordenada `y`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+) +
+  geom_bar(mapping = aes(fill = estu_genero)) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+::::
+
+## Capas {.center}
+
+::: {.incremental}
+- **Geometría**: cómo se muestran los datos a través de atributos estéticos.
+- **Transformación estadística**: calcula nuevas variables a partir de los datos y afecta qué parte de ellos se muestra. 
+- **Ajuste de posición**: determina la ubicación en la que se presentará visualmente cada dato.
+:::
+
+## Normalización {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|7|8|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-norm
+#| fig-cap: Gráfico de barras apiladas y normalizadas en el rango $[0,1]$
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(y = estu_prgm_academico)
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+::::
+
+## Ordenamiento de etiquetas {.center .smaller}
+
+```{r}
+#| echo: true
+#| classes: fragment
+# Crear variable ----
+estu_genero_muestra <- saber_pro_genericas_faedis_2021_2024$estu_genero[1:10]
+estu_genero_muestra
+```
+\
+```{r}
+#| echo: true
+#| classes: fragment
+# Identificar "F" ----
+estu_genero_muestra == "F"
+```
+\
+```{r}
+#| echo: true
+#| classes: fragment
+# Calcular proporción mediante coerción ----
+mean(estu_genero_muestra == "F")
+```
+
+## Ordenamiento de etiquetas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|4-8|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-fct-reorder
+#| fig-cap: Ordenamiento de etiquetas de un eje asociado a una coordenada utilizando la función `fct_reorder()`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18))
+```
+:::
+::::
+
+## Modificación de etiquetas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="56%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|17-19|20-22|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  )
+```
+:::
+
+::: {.column width="44%"}
+```{r}
+#| label: fig-scale-x-continuous-fill-discrete
+#| fig-cap: Modificación de etiquetas de un eje asociado a una coordenada y a un atributo estético asociado con una variable en los datos
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  )
+```
+:::
+::::
+
+## Modificación de etiquetas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="56%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|23-33|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  ) +
+  labs(
+    x = "Porcentaje de inscritos",
+    y = NULL,
+    fill = "Género",
+    title = str_wrap(
+      "Proporción inscritos Saber Pro por género y programa en FAEDIS",
+      width = 50
+    ),
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+
+::: {.column width="44%"}
+```{r}
+#| label: fig-labs
+#| fig-cap: Uso de la función `labs()` para agregar, modificar o eliminar etiquetas en un gráfico
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  ) +
+  labs(
+    x = "Porcentaje de inscritos",
+    y = NULL,
+    fill = "Género",
+    title = str_wrap(
+      "Proporción inscritos Saber Pro por género y programa en FAEDIS",
+      width = 50
+    ),
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+::::
+
+## Tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="56%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|34-36|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  ) +
+  labs(
+    x = "Porcentaje de inscritos",
+    y = NULL,
+    fill = "Género",
+    title = str_wrap(
+      "Proporción inscritos Saber Pro por género y programa en FAEDIS",
+      width = 50
+    ),
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+
+::: {.column width="44%"}
+```{r}
+#| label: fig-theme
+#| fig-cap: Uso de la función `theme()` para modificar la posición de una leyenda
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    y = fct_reorder(
+      estu_prgm_academico,
+      .x = estu_genero == "F",
+      .fun = mean
+    )
+  )
+) +
+  geom_bar(
+    mapping = aes(fill = estu_genero),
+    color = "black",
+    position = "fill"
+  ) +
+  scale_y_discrete(labels = label_wrap_gen(width = 18)) +
+  scale_x_continuous(
+    labels = label_percent()
+  ) +
+  scale_fill_discrete(
+    labels = c("Femenino", "Masculino")
+  ) +
+  labs(
+    x = "Porcentaje de inscritos",
+    y = NULL,
+    fill = "Género",
+    title = str_wrap(
+      "Proporción inscritos Saber Pro por género y programa en FAEDIS",
+      width = 50
+    ),
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+::::
+
+# Gráfico de puntos
+
+##
+
+```{r}
+#| label: fig-points
+#| fig-cap: Resultado final de un gráfico de puntos aplicando facetas y utilizando `ggplot2`
+#| fig-height: 6.5
+#| echo: false
+#| message: false
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(
+    facets = vars(estu_prgm_academico),
+    labeller = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Puntaje módulo lectura crítica (rango [0,300])",
+    y = "Puntaje módulo razonamiento cuantitativo (rango [0,300])",
+    title = "Asociación puntaje módulos por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+
+## Datos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-3|5-8|10-11|"
+# Cargar paquetes ----
+library(tidyverse)
+library(scales)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+glimpse(saber_pro_genericas_faedis_2021_2024)
+```
+:::
+::::
+
+## Datos y mapeo {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3-6|8|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point()
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-data-map-aes-x-y-geom-point
+#| fig-cap: Gráfico de puntos
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point()
+```
+:::
+::::
+
+## Mapeo {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|9|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-geom-smooth
+#| fig-cap: Gráfico de puntos superponiendo una recta mediante el uso de la geometría `geom_smooth()` y el método `lm`
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+:::
+::::
+
+## Regresión lineal {.smaller .center}
+
+:::: {.columns}
+::: {.column width="65%"}
+```{r}
+#| lst-label: lst-lm
+#| lst-cap: Uso de la función `lm()` para obtener la estimación de los parámetros en una regresión lineal simple
+#| echo: true
+lm(
+  formula = mod_razona_cuantitat_punt ~ mod_lectura_critica_punt,
+  data = saber_pro_genericas_faedis_2021_2024
+)
+```
+:::
+::: {.column width="35%"}
+$$
+y = \beta_0 + \beta_1x + \epsilon
+$${#eq-population-model}
+
+$$
+\hat{y} = \hat{\beta}_0 + \hat{\beta}_1x 
+$${#eq-estimated-model}
+\
+```{r}
+#| label: tbl-estimated-parameters
+#| tbl-cap: Parámetros estimados utilizando la función `lm()` en una regresión lineal simple
+#| echo: false
+linear_model <- lm(
+  formula = mod_razona_cuantitat_punt ~ mod_lectura_critica_punt,
+  data = saber_pro_genericas_faedis_2021_2024
+)
+
+lineal_model_table <- linear_model |>
+  tidy() |>
+  select(term, estimate) |>
+  mutate(
+    term = case_when(
+      term == "(Intercept)" ~ "$\\beta_0$",
+      term == "mod_lectura_critica_punt" ~ "$\\beta_1$",
+      TRUE ~ term
+    )
+  )
+
+lineal_model_table |>
+  gt() |>
+  cols_label(
+    term = "Parámetro",
+    estimate = "Estimación"
+  ) |>
+  fmt_number(
+    columns = estimate,
+    decimals = 2
+  ) |>
+  fmt_markdown(
+    columns = term
+  ) |>
+  cols_align(
+    align = "center"
+  ) |>
+  cols_width(
+    term ~ pct(45),
+    estimate ~ pct(55)
+  ) |>
+  tab_options(
+    table.width = pct(80)
+  )
+```
+:::
+::::
+
+## Facetas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|10-13|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(
+    facets = vars(estu_prgm_academico),
+    labeller = label_wrap_gen(width = 18)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-facets
+#| fig-cap: Uso de la función `facet_wrap()` junto con el parámetro facets y la función `vars()` como argumento para visualizar diferentes subconjuntos de datos
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(
+    facets = vars(estu_prgm_academico),
+    labeller = label_wrap_gen(width = 18)
+  )
+```
+:::
+::::
+
+## {.center}
+
+```{r}
+#| label: tbl-estimated-parameters-facet
+#| tbl-cap: Parámetros estimados utilizando la función `lm()` en una regresión lineal simple por programa académico
+#| echo: false
+saber_pro_genericas_faedis_2021_2024_lm_tbl <- saber_pro_genericas_faedis_2021_2024 |>
+  select(
+    estu_snies_prgmacademico,
+    estu_prgm_academico,
+    mod_lectura_critica_punt,
+    mod_razona_cuantitat_punt
+  ) |>
+  nest(
+    .by = c(
+      estu_snies_prgmacademico,
+      estu_prgm_academico
+    )
+  ) |>
+  mutate(
+    lm = map(
+      .x = data,
+      .f = \(x) {
+        lm(
+          formula = mod_razona_cuantitat_punt ~ mod_lectura_critica_punt,
+          data = x
+        )
+      }
+    )
+  ) |>
+  mutate(
+    lm = map(
+      .x = lm,
+      .f = \(x) tidy(x = x)
+    )
+  )
+
+saber_pro_genericas_faedis_2021_2024_lm_coefs <- saber_pro_genericas_faedis_2021_2024_lm_tbl |>
+  select(
+    estu_prgm_academico,
+    lm
+  ) |>
+  mutate(
+    lm = map(
+      .x = lm,
+      .f = \(x) {
+        x |>
+          select(term, estimate) |>
+          mutate(
+            term = case_when(
+              term == "(Intercept)" ~ "beta_0",
+              term == "mod_lectura_critica_punt" ~ "beta_1",
+              TRUE ~ term
+            )
+          )
+      }
+    )
+  ) |>
+  unnest(
+    col = lm
+  ) |>
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  )
+
+saber_pro_genericas_faedis_2021_2024_lm_coefs |>
+  gt() |>
+  cols_label(
+    estu_prgm_academico = "Programa académico",
+    beta_0 = md("$\\beta_0$"),
+    beta_1 = md("$\\beta_1$")
+  ) |>
+  fmt_number(
+    columns = where(fn = is.numeric),
+    decimals = 2
+  ) |>
+  cols_align(
+    align = "center",
+    columns = where(fn = is.numeric)
+  ) |>
+  cols_width(
+    estu_prgm_academico ~ px(200),
+    beta_0 ~ px(50),
+    beta_1 ~ px(50)
+  ) |>
+  tab_options(
+    table.width = pct(90)
+  )
+```
+
+## Escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|14-20|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(
+    facets = vars(estu_prgm_academico),
+    labeller = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Puntaje módulo lectura crítica (rango [0,300])",
+    y = "Puntaje módulo razonamiento cuantitativo (rango [0,300])",
+    title = "Asociación puntaje módulos por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-scales
+#| fig-cap: Uso de la función `labs()` para agregar y modificar etiquetas en un gráfico 
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024,
+  mapping = aes(
+    x = mod_lectura_critica_punt,
+    y = mod_razona_cuantitat_punt
+  )
+) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(
+    facets = vars(estu_prgm_academico),
+    labeller = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Puntaje módulo lectura crítica (rango [0,300])",
+    y = "Puntaje módulo razonamiento cuantitativo (rango [0,300])",
+    title = "Asociación puntaje módulos por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+::::
+
+# Gráfico de líneas
+
+## Datos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-7|9-10|"
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024_programas <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis_programas.rds"
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_faedis_2021_2024_programas)
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024_programas <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_programas.rds"
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_faedis_2021_2024_programas)
+```
+:::
+::::
+
+## Mapeo y capas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3-7|8|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line()
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-data-map-aes-x-y-geom-line
+#| fig-cap: Uso de la función `geom_line()` para generar un gráfico de líneas
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line()
+```
+:::
+::::
+
+## Mapeo y capas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|9|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    aes(group = estu_prgm_academico)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-map-aes-group-geom-line
+#| fig-cap: Uso del atributo estético group dentro de la función `aes()` en conjunto con la función `geom_line()` para generar un gráfico de líneas por cada categoría dentro de un grupo 
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    aes(group = estu_prgm_academico)
+  )
+```
+:::
+::::
+
+## Capas y escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|11|14-16|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-map-aes-color-geom-line
+#| fig-cap: Uso del atributo estético `color` dentro de la función `aes()` en conjunto con la función `geom_line()` y modificación de las etiquetas dentro de una leyenda asociadas con este atributo estético
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+::::
+
+## Capas y escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|14|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+
+::: {.column width="45%"}
+- Aplicación del concepto de **herencia**
+```{r}
+#| label: fig-geom-point
+#| fig-cap: Uso de la función `geom_point()` para resaltar las coordenadas de cada dato dentro de un gráfico de líneas
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  )
+```
+:::
+::::
+
+## Escalas y tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|15-22|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+
+::: {.column width="45%"}
+```{r}
+#| label: fig-labs-2
+#| fig-cap: Uso de la función `labs()` para agregar y modificar etiquetas en un gráfico 
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = estu_prgm_academico
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+::::
+
+## Escalas y tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|8-12|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = fct_reorder(
+        estu_prgm_academico,
+        .x = punt_global,
+        .fun = last
+      )
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+
+::: {.column width="45%"}
+- Ordenamiento de etiquetas
+```{r}
+#| label: fig-color-fct-reorder
+#| fig-cap: Ordenamiento de etiquetas dentro de una leyenda asociadas al atributo estético `color` utilizando la función `fct_reorder()` 
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = fct_reorder(
+        estu_prgm_academico,
+        .x = punt_global,
+        .fun = last
+      )
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+::::
+
+## Escalas y tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|28-30|18|"
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    aes(
+      group = estu_prgm_academico,
+      color = fct_reorder(
+        estu_prgm_academico,
+        .x = punt_global,
+        .fun = last
+      )
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18),
+    guide = guide_legend(nrow = 3, reverse = TRUE)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+
+::: {.column width="45%"}
+- Modificación de la leyenda
+
+  - ¿`last`, `first` u otra opción? 
+```{r}
+#| label: fig-theme-guide-legend
+#| fig-cap: Uso de las funciones `guide_legend()` y `theme()` para modificar la leyenda dentro de un gráfico  
+#| lightbox: true
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(x = ano, y = punt_global)
+) +
+  geom_line(
+    aes(
+      group = estu_prgm_academico,
+      color = fct_reorder(
+        estu_prgm_academico,
+        .x = punt_global,
+        .fun = last
+      )
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18),
+    guide = guide_legend(nrow = 3, reverse = TRUE)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+::::
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
