@@ -83,6 +83,7 @@ show_palette <- function(hex_codes, n_col, size) {
 
 ::: {.incremental}
 - Descargar datos: `2021-2024_saber-pro-genericas_faedis.rds`
+
 - Generar carpetas:
 
   - `data`
