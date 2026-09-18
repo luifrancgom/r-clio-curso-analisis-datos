@@ -982,6 +982,52 @@ ggplot(
 
 # Gráfico de líneas
 
+##
+
+```{r}
+#| label: fig-lines
+#| fig-cap: Resultado final de un gráfico de líneas utilizando `ggplot2`
+#| fig-height: 5.5
+#| echo: false
+saber_pro_genericas_faedis_2021_2024_programas <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_programas.rds"
+)
+
+ggplot(
+  data = saber_pro_genericas_faedis_2021_2024_programas,
+  mapping = aes(
+    x = ano,
+    y = punt_global
+  )
+) +
+  geom_line(
+    mapping = aes(
+      group = estu_prgm_academico,
+      color = fct_reorder(
+        estu_prgm_academico,
+        .x = punt_global,
+        .fun = last
+      )
+    )
+  ) +
+  geom_point() +
+  scale_color_discrete(
+    labels = label_wrap_gen(width = 18),
+    guide = guide_legend(nrow = 3, reverse = TRUE)
+  ) +
+  labs(
+    x = "Año",
+    y = "Promedio puntaje global (rango [0,300])",
+    color = NULL,
+    title = "Promedio puntaje global por programa en FAEDIS",
+    subtitle = "Periodo: 2021 - 2024",
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
 ## Datos {.smaller .center}
 
 :::: {.columns}
