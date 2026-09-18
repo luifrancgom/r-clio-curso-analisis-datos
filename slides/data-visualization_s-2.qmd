@@ -892,7 +892,8 @@ saber_pro_genericas_faedis_2021_2024_lm_coefs <- saber_pro_genericas_faedis_2021
   pivot_wider(
     names_from = term,
     values_from = estimate
-  )
+  ) |>
+  arrange(desc(beta_1))
 
 saber_pro_genericas_faedis_2021_2024_lm_coefs |>
   gt() |>
