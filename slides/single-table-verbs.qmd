@@ -1,0 +1,1321 @@
+---
+title: Verbos de una sola tabla
+subtitle: Sesión 1
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+    reference-location: document
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+library(tidyverse)
+library(gt)
+```
+
+# Preliminaries
+
+## {.smaller .center}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿`2021-2024_saber-pro-genericas_faedis.rds` se encuentra dentro de la carpeta `data`?
+
+- Generar carpetas:
+
+  - `010_verbos-una-sola-tabla-en-r`
+
+    - Crear archivo `001_manipular-datos-una-sola-tabla.R`
+
+- Descargar datos: `2021_2024-saber_pro-genericas.csv.xz`
+
+  - Agregar en `data`
+:::
+
+# Gramática de manipulación de datos en `dplyr`
+
+## {.smaller .center}
+
+:::: {.fragment}
+El paquete `dplyr`, incluido en el `tidyverse`, permite manipular datos a partir de un conjunto de datos en 2 niveles:
+
+::: {.incremental}
+1. Dentro de una sola tabla de datos
+2. Entre diferentes tablas de datos
+:::
+
+::::
+
+::: {.fragment}
+En esta sesión abarcaremos el nivel 1. Luego en la próxima sesión abarcaremos el nivel 2.
+:::
+
+## {.smaller .center}
+
+En el paquete `dplyr`, para mantener la consistencia de las funciones que lo componen, siempre se cumple que cada uno de los verbos obedece a los siguientes aspectos [@wickham_r_2023, Cap. 3]:
+
+::: {.incremental}
+1. El primer argumento es una tibble (o en su defecto un objeto de R similar).
+2. Los argumentos subsiguientes especifican las columnas, filas o expresiones que operarán sobre las filas o columnas.
+3. El resultado[^footnote-1] de una función en `dplyr` es siempre una nueva tibble (o en su defecto un objeto de R similar).
+:::
+
+[^footnote-1]: En la documentación de ayuda de R, al buscar por ejemplo información acerca de la función `filter()` con el comando `?filter` en la consola, la descripción del resultado se encuentra bajo la sección titulada **Value**. En el curso se usará el término "resultado" de la función y no "valor", con el fin de utilizar una expresión más intuitiva.
+
+## Verbos {.smaller .center}
+
+Los verbos para manipular datos en una sola tabla se encuentran organizados en 3 categorías teniendo en cuenta el elemento que se desea manipular: 
+
+::: {.incremental}
+a. Verbos para filas
+b. Verbos para columnas
+c. Verbos para colapsar, agrupar o desagrupar filas
+:::
+
+## Verbos para filas {.smaller .center}
+
+En esta categoría se incluyen las funciones:
+
+- `filter()`
+- `slice()`
+- `arrange()`
+
+## `filter()` {.smaller .center}
+
+![Representación gráfica de la función `filter()`](/images/filter.png){.lightbox #fig-filter-verb}
+
+## `filter()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|10-13|11|12|"
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+# Filtrar ---
+filter(
+  saber_pro_genericas_faedis_2021_2024,
+  ano == 2022 & estu_genero == "M"
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+saber_pro_genericas_faedis_2021_2024 <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis.rds"
+)
+
+# Filtrar ---
+filter(
+  saber_pro_genericas_faedis_2021_2024,
+  ano == 2022 & estu_genero == "M"
+)
+```
+:::
+::::
+
+## `slice()` {.smaller .center}
+
+![Representación gráfica de la función `slice()`](/images/slice.png){.lightbox #fig-slice-verb}
+
+## `slice()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3|4|"
+# Seleccionar filas por posición ----
+slice(
+  saber_pro_genericas_faedis_2021_2024,
+  c(1, 3, 5)
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+# Seleccionar filas por posición ----
+slice(
+  saber_pro_genericas_faedis_2021_2024,
+  c(1, 3, 5)
+)
+```
+:::
+::::
+
+## `slice()` {.smaller .center}
+
+La función `slice()` tiene asociado un conjunto de funciones auxiliares de la forma `slice_*` que pueden ser útiles para seleccionar determinadas filas:
+
+::: {.incremental}
+a. `slice_head()` y `slice_tail()` permiten seleccionar las primeras o últimas filas.
+b. `slice_sample()` permite seleccionar filas de manera aleatoria.
+c. `slice_min()` y `slice_max()` permiten seleccionar aquellas filas que contienen los valores más pequeños o más grandes de una determinada variable.
+:::
+
+## `arrange()` {.smaller .center}
+
+![Representación gráfica de la función `arrange()`](/images/arrange.png){.lightbox #fig-arrange-verb}
+
+## `arrange()` {.smaller .center}
+
+::: {.incremental}
+- Por defecto, `arrange()` ordena los datos de forma ascendente.
+- En caso de necesitar un ordenamiento descendente, se debe aplicar la función auxiliar `desc()` sobre la variable que se desee organizar bajo ese criterio. 
+:::
+
+## `arrange()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="40%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3-4|"
+arrange(
+  saber_pro_genericas_faedis_2021_2024,
+  desc(ano),
+  estu_semestrecursa
+)
+```
+:::
+
+::: {.column width="60%"}
+```{r}
+arrange(
+  saber_pro_genericas_faedis_2021_2024,
+  desc(ano),
+  estu_semestrecursa
+)
+```
+:::
+::::
+
+## Verbos para columnas {.smaller .center}
+
+En esta categoría se incluyen las funciones:
+
+- `select()`
+- `rename()`
+- `mutate()`
+- `relocate()`
+
+## `select()` {.smaller .center}
+
+![Representación gráfica de la función `select()`](/images/select.png){.lightbox .nostretch #fig-select-verb width="80%"}
+
+## `select()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3-5|"
+select(
+  saber_pro_genericas_faedis_2021_2024,
+  ano,
+  estu_consecutivo,
+  punt_global
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+select(
+  saber_pro_genericas_faedis_2021_2024,
+  ano,
+  estu_consecutivo,
+  punt_global
+)
+```
+:::
+::::
+
+## `rename()` {.smaller .center}
+
+![Representación gráfica de la función `rename()`](/images/rename.png){.lightbox #fig-rename-verb}
+
+## `rename()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3|"
+rename(
+  saber_pro_genericas_faedis_2021_2024,
+  id_saber_pro_estudiante = estu_consecutivo
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+rename(
+  saber_pro_genericas_faedis_2021_2024,
+  id_saber_pro_estudiante = estu_consecutivo
+)
+```
+:::
+::::
+
+## `mutate()` {.smaller .center}
+
+![Representación gráfica de la función `mutate()`](/images/mutate.png){.lightbox #fig-mutate-verb}
+
+## `mutate()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3-4|5|"
+mutate(
+  saber_pro_genericas_faedis_2021_2024,
+  punt_global_norm = (punt_global - min(punt_global)) /
+    (max(punt_global) - min(punt_global)),
+  .keep = "used"
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+mutate(
+  saber_pro_genericas_faedis_2021_2024,
+  punt_global_norm = (punt_global - min(punt_global)) /
+    (max(punt_global) - min(punt_global)),
+  .keep = "used"
+)
+```
+:::
+::::
+
+## `relocate()` {.smaller .center}
+
+![Representación gráfica de la función `relocate()`](/images/relocate.png){.lightbox #fig-relocate-verb}
+
+## `relocate()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3|4|"
+relocate(
+  saber_pro_genericas_faedis_2021_2024,
+  punt_global,
+  .after = estu_consecutivo
+)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+relocate(
+  saber_pro_genericas_faedis_2021_2024,
+  punt_global,
+  .after = estu_consecutivo
+)
+```
+:::
+::::
+
+## Operador pipe (`|>`) {.smaller .center}
+
+::: {.incremental}
+- Cuando se manipulan datos usualmente se requieren combinar múltiples verbos para contestar una determinada pregunta.
+- El operador pipe (`|>`) permite realizar este proceso donde fue introducido en la versión `4.1.0` de R.
+:::
+
+## {.smaller .center}
+
+```{r}
+#| label: tbl-use-interpreation-pipe
+#| tbl-cap: Uso e interpretación del operador pipe (`|>`)
+#| echo: false
+use_interpretation_pipe <- tibble(
+  use = c(
+    "$a \\;\\lvert>\\; f(x)$",
+    "$b \\;\\lvert>\\; f(x, y)$",
+    "$c \\;\\lvert>\\; f(x) \\;\\lvert>\\; g(y)$",
+    "$d \\;\\lvert>\\; f(x, y = \\_)$"
+  ),
+  interpretation = c(
+    "$f(x = a)$",
+    "$f(x = b, y)$",
+    "$g(y = f(x = c))$",
+    "$f(x, y = d)$"
+  )
+)
+
+use_interpretation_pipe |>
+  gt() |>
+  cols_label(
+    use = "Uso",
+    interpretation = "Interpretación"
+  ) |>
+  cols_width(
+    use ~ pct(50),
+    interpretation ~ pct(50)
+  ) |>
+  fmt_markdown() |>
+  opt_row_striping() |>
+  tab_options(
+    table.font.size = pct(100)
+  )
+```
+
+## Operador pipe (`|>`) {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="40%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1|2-12|13-19|20|21|"
+saber_pro_genericas_faedis_2021_2024 |>
+  select(
+    ano,
+    estu_consecutivo,
+    estu_snies_prgmacademico,
+    estu_prgm_academico,
+    mod_competen_ciudada_punt,
+    mod_comuni_escrita_punt,
+    mod_ingles_punt,
+    mod_lectura_critica_punt,
+    mod_razona_cuantitat_punt
+  ) |>
+  filter(
+    mod_competen_ciudada_punt == 0 |
+      mod_comuni_escrita_punt == 0 |
+      mod_ingles_punt == 0 |
+      mod_lectura_critica_punt == 0 |
+      mod_razona_cuantitat_punt == 0
+  ) |>
+  arrange(estu_prgm_academico) |>
+  glimpse()
+```
+:::
+
+::: {.column width="60%"}
+```{r}
+saber_pro_genericas_faedis_2021_2024 |>
+  select(
+    ano,
+    estu_consecutivo,
+    estu_snies_prgmacademico,
+    estu_prgm_academico,
+    mod_competen_ciudada_punt,
+    mod_comuni_escrita_punt,
+    mod_ingles_punt,
+    mod_lectura_critica_punt,
+    mod_razona_cuantitat_punt
+  ) |>
+  filter(
+    mod_competen_ciudada_punt == 0 |
+      mod_comuni_escrita_punt == 0 |
+      mod_ingles_punt == 0 |
+      mod_lectura_critica_punt == 0 |
+      mod_razona_cuantitat_punt == 0
+  ) |>
+  arrange(estu_prgm_academico) |>
+  glimpse()
+```
+:::
+::::
+
+## Ventajas uso del operador `|>` {.smaller .center}
+
+::: {.incremental}
+- Estructurar el proceso de manipulación de datos de manera secuencial
+
+  - De izquierda a derecha
+  - Permite leer el código de arriba hacia abajo 
+
+- Minimiza la necesidad de crear variables intermedias o definiciones de funciones
+- Facilitar agregar o eliminar pasos en cualquier parte de la secuencia
+:::
+
+## Funciones anidadas vs `|>` {.smaller .center}
+
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|4-15|3-21|2-23|"
+glimpse(
+  arrange(
+    filter(
+      select(
+        saber_pro_genericas_faedis_2021_2024,
+        ano,
+        estu_consecutivo,
+        estu_snies_prgmacademico,
+        estu_prgm_academico,
+        mod_competen_ciudada_punt,
+        mod_comuni_escrita_punt,
+        mod_ingles_punt,
+        mod_lectura_critica_punt,
+        mod_razona_cuantitat_punt
+      ),
+      mod_competen_ciudada_punt == 0 |
+        mod_comuni_escrita_punt == 0 |
+        mod_ingles_punt == 0 |
+        mod_lectura_critica_punt == 0 |
+        mod_razona_cuantitat_punt == 0
+    ),
+    estu_prgm_academico
+  )
+)
+```
+
+## Variables intermedias vs `|>` {.smaller .center}
+
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-13|15-23|25-29|31-32|"
+# Seleccionar columnas ----
+datos_seleccionados <- select(
+  saber_pro_genericas_faedis_2021_2024,
+  ano,
+  estu_consecutivo,
+  estu_snies_prgmacademico,
+  estu_prgm_academico,
+  mod_competen_ciudada_punt,
+  mod_comuni_escrita_punt,
+  mod_ingles_punt,
+  mod_lectura_critica_punt,
+  mod_razona_cuantitat_punt
+)
+
+# Filtrar filas con ceros ----
+datos_filtrados <- filter(
+  datos_seleccionados,
+  mod_competen_ciudada_punt == 0 |
+    mod_comuni_escrita_punt == 0 |
+    mod_ingles_punt == 0 |
+    mod_lectura_critica_punt == 0 |
+    mod_razona_cuantitat_punt == 0
+)
+
+# Ordenar por programa académico ---
+datos_ordenados <- arrange(
+  datos_filtrados,
+  estu_prgm_academico
+)
+
+# "Vistazo" de datos ----
+glimpse(datos_ordenados)
+```
+
+## Verbos para colapsar, agrupar y desagrupar filas {.smaller .center}
+
+En esta categoría se incluyen las funciones:
+
+- `group_by()`
+- `summarise()`
+- `ungroup()`
+
+## `group_by()` {.smaller .center}
+
+![Representación gráfica de la función `group_by()`](/images/group-by.png){.lightbox .nostretch #fig-group-by-verb width="80%"}
+
+## `group_by()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="40%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1|2-5|3-4|"
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  )
+```
+:::
+
+::: {.column width="60%"}
+```{r}
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  )
+```
+:::
+::::
+
+## `summarise()` {.smaller .center}
+
+![Representación gráfica de la función `summarise()`](/images/summarise.png){.lightbox #fig-summarise-verb}
+
+## `summarise()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-5|6-9|7-8|"
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  ) |>
+  summarise(
+    punt_global = mean(punt_global) |>
+      round(digits = 0)
+  )
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  ) |>
+  summarise(
+    punt_global = mean(punt_global) |>
+      round(digits = 0)
+  )
+```
+:::
+::::
+
+## `ungroup()` {.smaller .center}
+
+![Representación gráfica de la función `ungroup()`](/images/ungroup.png){.lightbox .nostretch #fig-ungroup-verb width="80%"}
+
+## `ungroup()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-9|10|"
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  ) |>
+  summarise(
+    punt_global = mean(punt_global) |>
+      round(digits = 0)
+  ) |>
+  ungroup()
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| message: false
+saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_genero
+  ) |>
+  summarise(
+    punt_global = mean(punt_global) |>
+      round(digits = 0)
+  ) |>
+  ungroup()
+```
+:::
+::::
+
+# Caso de estudio: obtención de datos de interés del Saber-Pro para FAEDIS
+
+## Datos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="53%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-7|4-6|9-10|"
+# Importar datos ----
+saber_pro_genericas_2021_2024 <- read_csv(
+  file = "data/2021_2024-saber_pro-genericas.csv.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_character()
+  )
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_2021_2024)
+```
+- `estu_agregado` indica si la observación es (`S` para Sí) o no (`N` para No) incluida en el informe nacional de resultados del Saber-Pro.
+- Las demás variables no se describirán por qué no son relevantes para el estudio de caso.
+:::
+
+::: {.column width="45%"}
+```{r}
+#| message: false
+# Importar datos ----
+saber_pro_genericas_2021_2024 <- read_csv(
+  file = "../data/2021_2024-saber_pro-genericas.csv.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_character()
+  )
+)
+
+# Inspeccionar datos ----
+glimpse(saber_pro_genericas_2021_2024)
+```
+:::
+::::
+
+## `filter()` y operador binario `%in%` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="47%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-11|13-15|14|15|17|"
+# Filtrar ----
+## Vector auxiliar ----
+snies_faedis <- c(
+  6527,
+  108241,
+  11428,
+  11004,
+  53703,
+  105142,
+  10963
+)
+
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024 |>
+  filter(estu_agregado == "S") |>
+  filter(
+    estu_snies_prgmacademico %in% snies_faedis
+  )
+
+saber_pro_genericas_2021_2024_faedis
+```
+::::
+
+:::: {.column width="53%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| message: false
+# Importar datos ----
+# Filtrar ----
+## Vector auxiliar ----
+snies_faedis <- c(
+  6527,
+  108241,
+  11428,
+  11004,
+  53703,
+  105142,
+  10963
+)
+
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024 |>
+  filter(estu_agregado == "S") |>
+  filter(estu_snies_prgmacademico %in% snies_faedis)
+
+saber_pro_genericas_2021_2024_faedis
+```
+:::
+
+::::
+
+:::::
+
+## `select()` y operadores o funciones auxiliares {.smaller .center}
+
+::: {.incremental}
+- `:`: permite seleccionar un rango consecutivo de variables
+- `&` y `|`: son operadores lógicos vectorizados que se pueden utilizar para seleccionar la unión o intersección de un conjunto de variables
+- `starts_with()`: permite seleccionar variables que comienzan con un determinado prefijo
+- `ends_with()`: permite seleccionar variables que terminan con un determinado sufijo
+:::
+
+## `select()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-15|8|10|13|"
+# Seleccionar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  select(
+    ano,
+    estu_consecutivo,
+    estu_genero,
+    estu_semestrecursa,
+    fami_educacionmadre:fami_estratovivienda,
+    estu_exterior,
+    ends_with("_presentacion"),
+    estu_snies_prgmacademico,
+    estu_prgm_academico,
+    ends_with("_punt") | starts_with("punt_"),
+    mod_ingles_desem
+  )
+
+saber_pro_genericas_2021_2024_faedis
+```
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| message: false
+# Seleccionar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  select(
+    ano,
+    estu_consecutivo,
+    estu_genero,
+    estu_semestrecursa,
+    fami_educacionmadre:fami_estratovivienda,
+    estu_exterior,
+    ends_with("_presentacion"),
+    estu_snies_prgmacademico,
+    estu_prgm_academico,
+    ends_with("_punt") | starts_with("punt_"),
+    mod_ingles_desem
+  )
+
+saber_pro_genericas_2021_2024_faedis
+```
+:::
+
+::::
+
+:::::
+
+## `relocate()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-6|7-10|11-14|15-18|19-22|"
+# Reubicar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  relocate(
+    fami_estratovivienda,
+    .before = fami_educacionmadre
+  ) |>
+  relocate(
+    fami_estratovivienda,
+    .before = fami_educacionmadre
+  ) |>
+  relocate(
+    estu_depto_presentacion,
+    .after = estu_cod_depto_presentacion
+  ) |>
+  relocate(
+    estu_mcpio_presentacion,
+    .after = estu_cod_mcpio_presentacion
+  ) |>
+  relocate(
+    mod_ingles_desem,
+    .after = mod_ingles_punt
+  )
+
+saber_pro_genericas_2021_2024_faedis
+```
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| message: false
+# Reubicar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  relocate(
+    fami_estratovivienda,
+    .before = fami_educacionmadre
+  ) |>
+  relocate(
+    fami_estratovivienda,
+    .before = fami_educacionmadre
+  ) |>
+  relocate(
+    estu_depto_presentacion,
+    .after = estu_cod_depto_presentacion
+  ) |>
+  relocate(
+    estu_mcpio_presentacion,
+    .after = estu_cod_mcpio_presentacion
+  ) |>
+  relocate(
+    mod_ingles_desem,
+    .after = mod_ingles_punt
+  )
+
+saber_pro_genericas_2021_2024_faedis
+```
+:::
+
+::::
+
+:::::
+
+## `relocate()` {.smaller .center}
+
+- **Periodo**: `ano`
+- **Id**: `estu_consecutivo`
+- **Características de quien presenta la prueba**: `estu_genero`, `estu_semestrecursa`
+- **Entorno familiar**: `fami_estratovivienda`, `fami_educacionmadre`, `fami_educacionpadre`
+- **Lugar de presentación de la prueba**: `estu_exterior`, `estu_cod_depto_presentacion`, `estu_depto_presentacion`, `estu_cod_mcpio_presentacion`, `estu_mcpio_presentacion`
+- **Programa académico**: `estu_snies_prgmacademico`, `estu_prgm_academico`
+- **Resultados de la prueba**: `mod_competen_ciudada_punt`, `mod_comuni_escrita_punt`, `mod_ingles_punt`, `mod_ingles_desem`, `mod_lectura_critica_punt,`, `mod_razona_cuantitat_punt`, `punt_global`
+
+## `mutate()` {.smaller .center}
+
+:::  {style="font-size: 75%;"}
+
+| Clase | Tipo | Ejemplo | Etiqueta en `tibble` |
+| :--- | :--- | :--- | :--- |
+| Vector atómico | `logical` | `TRUE` | `<lgl>` |
+| | `integer` | `1L` | `<int>` |
+| | `double` | `152.35` | `<dbl>` |
+| | `character` | `"Ingeniería Civil"` | `<chr>` |
+| Lista | `list` | `list(TRUE, 1L, 152.35, "Ingeniería Civil")` | `<list>` |
+| Objeto integrado | `factor` | `factor(x = c("Femenino", "Masculino"))` | `<fct>` |
+| | `ordered` | `factor(x = c("10", "11", "12 o más"), ordered = TRUE)` | `<ord>` |
+| | `Date` | `ymd("2021-06-01")` | `<date>` |
+
+: Algunos tipos de datos en R {#tbl-some-data-types-in-r}
+
+:::
+
+## `mutate()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-6|7-76|8-11|12-16|17-29|30-47|48-65|66-75|"
+# Transformar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  mutate(
+    ano = as.integer(ano),
+    estu_snies_prgmacademico = as.integer(estu_snies_prgmacademico)
+  ) |>
+  mutate(
+    estu_genero = factor(
+      x = estu_genero,
+      ordered = FALSE
+    ),
+    estu_semestrecursa = factor(
+      x = estu_semestrecursa,
+      levels = c("06", "07", "08", "09", "10", "11", "12 o más"),
+      ordered = TRUE
+    ),
+    fami_estratovivienda = factor(
+      x = fami_estratovivienda,
+      levels = c(
+        "Sin Estrato",
+        "Estrato 1",
+        "Estrato 2",
+        "Estrato 3",
+        "Estrato 4",
+        "Estrato 5",
+        "Estrato 6"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionmadre = factor(
+      x = fami_educacionmadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionpadre = factor(
+      x = fami_educacionpadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    mod_ingles_desem = factor(
+      x = mod_ingles_desem,
+      levels = c(
+        "A1",
+        "A2",
+        "B1",
+        "B2"
+      ),
+      ordered = TRUE
+    )
+  )
+
+saber_pro_genericas_2021_2024_faedis |>
+  glimpse()
+```
+:::
+
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| message: false
+# Transformar ----
+saber_pro_genericas_2021_2024_faedis <- saber_pro_genericas_2021_2024_faedis |>
+  mutate(
+    ano = as.integer(ano),
+    estu_snies_prgmacademico = as.integer(estu_snies_prgmacademico)
+  ) |>
+  mutate(
+    estu_genero = factor(
+      x = estu_genero,
+      ordered = FALSE
+    ),
+    estu_semestrecursa = factor(
+      x = estu_semestrecursa,
+      levels = c("06", "07", "08", "09", "10", "11", "12 o más"),
+      ordered = TRUE
+    ),
+    fami_estratovivienda = factor(
+      x = fami_estratovivienda,
+      levels = c(
+        "Sin Estrato",
+        "Estrato 1",
+        "Estrato 2",
+        "Estrato 3",
+        "Estrato 4",
+        "Estrato 5",
+        "Estrato 6"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionmadre = factor(
+      x = fami_educacionmadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionpadre = factor(
+      x = fami_educacionpadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    mod_ingles_desem = factor(
+      x = mod_ingles_desem,
+      levels = c(
+        "A1",
+        "A2",
+        "B1",
+        "B2"
+      ),
+      ordered = TRUE
+    )
+  )
+
+saber_pro_genericas_2021_2024_faedis |>
+  glimpse()
+```
+:::
+
+::::
+
+:::::
+
+## `group_by()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-7|"
+# Agrupar ----
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_snies_prgmacademico,
+    estu_prgm_academico
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| message: false
+# Agrupar ----
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024 |>
+  group_by(
+    ano,
+    estu_snies_prgmacademico,
+    estu_prgm_academico
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::::
+
+## `summarise()` y `across()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2-7|3-6|4|5|"
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  summarise(
+    across(
+      .cols = ends_with("punt") | starts_with("punt"),
+      .fns = mean
+    )
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  summarise(
+    across(
+      .cols = ends_with("punt") | starts_with("punt"),
+      .fns = mean
+    )
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::::
+
+## `ungroup()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|"
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  ungroup()
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  ungroup()
+
+saber_pro_genericas_faedis_2021_2024_programas
+```
+:::
+
+::::
+
+:::::
+
+## `mutate()` y `across()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="48%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2-7|3-6|4|5|"
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  mutate(
+    across(
+      .cols = ends_with("punt") | starts_with("punt"),
+      .fns = round
+    )
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas |>
+  glimpse()
+```
+:::
+
+::::
+
+:::: {.column width="52%"}
+
+::: {style="font-size: 85%;"}
+```{r}
+#| message: false
+saber_pro_genericas_faedis_2021_2024_programas <- saber_pro_genericas_faedis_2021_2024_programas |>
+  mutate(
+    across(
+      .cols = ends_with("punt") | starts_with("punt"),
+      .fns = round
+    )
+  )
+
+saber_pro_genericas_faedis_2021_2024_programas |>
+  glimpse()
+```
+:::
+
+::::
+
+:::::
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
