@@ -308,7 +308,7 @@ rename(
 
 :::: {.columns}
 
-::: {.column width="48%"}
+::: {.column width="55%"}
 ```{r}
 #| eval: false
 #| echo: true
@@ -320,9 +320,10 @@ mutate(
   .keep = "used"
 )
 ```
+- Si $x$ es una variable numérica entonces su normalización en el intervalo $[0, 1]$ se puede definir como $x_{norm} = \frac{x- \min(x)}{\max(x) - \min(x)}$ donde $\min(x)$ es el valor mínimo de la variable $x$ y $\max(x)$ es el valor máximo de la variable $x$.
 :::
 
-::: {.column width="52%"}
+::: {.column width="45%"}
 ```{r}
 mutate(
   saber_pro_genericas_faedis_2021_2024,
