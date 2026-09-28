@@ -1,5 +1,5 @@
 ---
-title: Verbos de una sola tabla
+title: Manipulación de datos
 subtitle: Sesión 1
 author:
   - name: 
@@ -29,7 +29,7 @@ library(tidyverse)
 library(gt)
 ```
 
-# Preliminaries
+# Preliminares
 
 ## {.smaller .center}
 

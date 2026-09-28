@@ -1,5 +1,5 @@
 ---
-title: Visualización de datos
+title: Manipulación de datos
 subtitle: Sesión 2
 author:
   - name: 
