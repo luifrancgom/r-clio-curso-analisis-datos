@@ -1,0 +1,1146 @@
+---
+title: Importación de datos
+subtitle: Sesión 1
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+    reference-location: document
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+library(tidyverse)
+library(readxl)
+```
+
+# Preliminares
+
+## {.smaller .center}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿El archivo `2021-2024_saber-pro-genericas_faedis_ajustado.rds` fue incluído en `data`? 
+
+- Generar carpetas:
+
+  - `012_importar-datos-rds-en-r`
+
+    - Crear archivo `001_importar-datos-formato-rds.R`
+
+  - `013_importar-datos-texto-plano-en-r`
+
+    - Crear archivo `001_importar-datos-formato-texto-plano.R`
+
+  - `014_importar-datos-hojas-calculo-en-r`
+
+    - Crear archivo `001_importar-datos-hojas-calculo.R`
+:::
+
+## {.smaller .center}
+
+::: {.incremental}
+- Descargar datos: 
+
+  - `2021-2024_saber-pro-genericas_faedis_ajustado.csv`
+  - `2021-saber_pro-genericas.txt.xz`
+  - `serie-nacional-de-poblacion_area-sexo-edad_2018-2070_2025-07-18.xlsx`
+
+     - Agregar en `data`
+:::
+
+# Serialización de datos en R
+
+## Formato `.rds` {.smaller .center}
+
+::: {.incremental}
+- El formato con extensión `.rds` es el **formato nativo de R**
+- Permite almacenar cualquier estructura de datos de R conservando íntegramente sus componentes y atributos originales.
+- Se basa en el concepto de **serialización**:
+  
+  > Proceso de traducir una estructura de datos o el estado de un objeto a un formato que pueda almacenarse o transmitirse y reconstruirse más adelante.
+
+- Almacena únicamente el **contenido y la estructura** del objeto y **no el nombre** con el que fue creado.
+:::
+
+## Ventajas y desventajas de archivos `.rds` {.smaller .center}
+
+::: {.incremental}
+- **Ventajas**:
+  - **Preservación total de tipos y atributos**: conserva factores (`<fct>`), niveles, órdenes (`<ord>`), enteros (`<int>`), fechas y atributos especiales sin pérdida estructural.
+  - **Eficiencia y velocidad**: al ser un archivo binario con compresión por defecto, minimiza el espacio ocupado en disco y maximiza la velocidad de lectura y escritura.
+
+- **Desventajas**:
+  - **Falta de interoperabilidad**: es un formato propio de R que no puede consumirse directamente desde otros lenguajes o herramientas.
+  - **No inspeccionable como texto plano**: no es posible abrirlo ni examinarlo en un editor de texto convencional.
+:::
+
+## Importar datos en formato `.rds` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-7|9|"
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+resultado_saber_pro_ajustado_rds <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+
+resultado_saber_pro_ajustado_rds
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+resultado_saber_pro_ajustado_rds <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+
+resultado_saber_pro_ajustado_rds
+```
+:::
+:::
+
+::::
+
+## Comparación: `.rds` frente a `.csv` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-4|6|"
+# Importar datos en formato .csv ----
+resultado_saber_pro_ajustado_csv <- read_csv(
+  file = "data/2021-2024_saber-pro-genericas_faedis_ajustado.csv"
+)
+
+resultado_saber_pro_ajustado_csv
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Importar datos en formato .csv ----
+resultado_saber_pro_ajustado_csv <- read_csv(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_ajustado.csv"
+)
+
+resultado_saber_pro_ajustado_csv
+```
+:::
+:::
+
+::::
+
+## Inspección de datos: `.rds` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Inspeccionar datos en .rds ----
+resultado_saber_pro_ajustado_rds |>
+  glimpse()
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+resultado_saber_pro_ajustado_rds |>
+  glimpse()
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- Se conservan factores nominales (`<fct>`) y ordinales (`<ord>`).
+- Se preservan números enteros (`<int>`).
+:::
+
+## Inspección de datos: `.csv` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Inspeccionar datos en .csv ----
+resultado_saber_pro_ajustado_csv |>
+  glimpse()
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+resultado_saber_pro_ajustado_csv |>
+  glimpse()
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- Las variables categóricas se degradan a caracteres (`<chr>`).
+- Los enteros se interpretan como números reales (`<dbl>`).
+:::
+
+## Exportación de datos en formato `.rds` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3|4|"
+# Exportar datos a formato .rds ----
+write_rds(
+  x = resultado_saber_pro_ajustado_rds,
+  file = "data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+```
+:::
+
+::: {.column width="52%"}
+::: {.incremental}
+- **`x`**: objeto de R que se desea serializar (tabla, lista, modelo, etc.).
+- **`file`**: ruta y nombre del archivo de destino con extensión `.rds`.
+- Permite almacenar en disco el estado final tras transformaciones o limpiezas de datos, listo para ser cargado en sesiones futuras sin pérdida de tipos.
+:::
+:::
+
+::::
+
+# Texto plano
+
+## Archivos `.csv` {#sec-csv-concept .smaller .center}
+
+::: {.incremental}
+- Un archivo `.csv` (*comma-separated values*) es un archivo de texto plano rectangular.
+- Cada línea del archivo representa un **registro o fila**.
+- Los campos o variables se separan por **comas (`,`)**.
+- La primera línea suele incluir los encabezados o nombres de columna.
+- Cuando un texto contiene comas internas, se encierra entre **comillas dobles (`"`)** para no dividir indebidamente los campos.
+- La función `read_csv()` importa archivos `.csv` mediante el parámetro `file`.
+- Para realizar pruebas con cadenas en memoria sin archivos en disco, se utiliza la función `I()` (*as is*).
+:::
+
+## `read_csv()` con datos en memoria {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|4-12|5|7|14-17|16|"
+# Cargar paquetes ----
+library(tidyverse)
+
+# Definir datos en formato .csv ----
+pregrado_faedis_csv <- "codigo_snies,nombre_programa
+6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Importar con I() ----
+pregrado_faedis_tbl <- read_csv(
+  file = I(pregrado_faedis_csv)
+)
+
+pregrado_faedis_tbl
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Definir datos en formato .csv ----
+pregrado_faedis_csv <- "codigo_snies,nombre_programa
+6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Importar con I() ----
+pregrado_faedis_tbl <- read_csv(
+  file = I(pregrado_faedis_csv)
+)
+
+pregrado_faedis_tbl
+```
+:::
+:::
+
+::::
+
+## Parámetros de importación: `skip` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-11|2-3|13-17|15|16|"
+# Archivo con metadatos iniciales ----
+pregrado_skip_csv <- "Facultad de Estudios a Distancia - FAEDIS
+Programas de pregrado vigentes
+codigo_snies,nombre_programa
+6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Omitir las dos primeras líneas ----
+read_csv(
+  file = I(pregrado_skip_csv),
+  skip = 2
+)
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Archivo con metadatos iniciales ----
+pregrado_skip_csv <- "Facultad de Estudios a Distancia - FAEDIS
+Programas de pregrado vigentes
+codigo_snies,nombre_programa
+6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Omitir las dos primeras líneas ----
+read_csv(
+  file = I(pregrado_skip_csv),
+  skip = 2
+)
+```
+:::
+:::
+
+::::
+
+## Parámetros de importación: `comment` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-12|2,5|13-17|15|16|"
+# Archivo con comentarios intercalados ----
+pregrado_comment_csv <- "# Listado de programas FAEDIS
+codigo_snies,nombre_programa
+6527,Administración de Empresas
+# 6527 en proceso de renovación registro calificado
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Ignorar líneas que inician con # ----
+read_csv(
+  file = I(pregrado_comment_csv),
+  comment = "#"
+)
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Archivo con comentarios intercalados ----
+pregrado_comment_csv <- "# Listado de programas FAEDIS
+codigo_snies,nombre_programa
+6527,Administración de Empresas
+# 6527 en proceso de renovación registro calificado
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Ignorar líneas que inician con # ----
+read_csv(
+  file = I(pregrado_comment_csv),
+  comment = "#"
+)
+```
+:::
+:::
+
+::::
+
+## Parámetros de importación: `col_names` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-8|10-14|12|13|"
+# Archivo sin fila de encabezado ----
+pregrado_no_header_csv <- "6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Suministrar nombres explícitos de columnas ----
+read_csv(
+  file = I(pregrado_no_header_csv),
+  col_names = c("codigo_snies", "nombre_programa")
+)
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Archivo sin fila de encabezado ----
+pregrado_no_header_csv <- "6527,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Suministrar nombres explícitos de columnas ----
+read_csv(
+  file = I(pregrado_no_header_csv),
+  col_names = c("codigo_snies", "nombre_programa")
+)
+```
+:::
+:::
+
+::::
+
+## Parámetros de importación: `na` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-10|3,7,8,10|13-17|14|15|"
+# Archivo con valores ausentes ----
+pregrado_na_csv <- "codigo_snies,nombre_programa
+6527,
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+NA,Ingeniería Industrial
+105142,N/D
+10963,Relaciones Internacionales y Estudios Políticos
+102005,Sin dato"
+
+# Especificar valores ausentes ----
+read_csv(
+  file = I(pregrado_na_csv),
+  na = c("", "NA", "Sin dato", "N/D")
+)
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Archivo con valores ausentes ----
+pregrado_na_csv <- "codigo_snies,nombre_programa
+6527,
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+NA,Ingeniería Industrial
+105142,N/D
+10963,Relaciones Internacionales y Estudios Políticos
+102005,Sin dato"
+
+# Especificar valores ausentes ----
+read_csv(
+  file = I(pregrado_na_csv),
+  na = c("", "NA", "Sin dato", "N/D")
+)
+```
+:::
+:::
+
+::::
+
+## Otros formatos de texto plano {.smaller .center}
+
+::: {.incremental}
+- **Valores separados por tabulaciones (`read_tsv()`)**:
+  - Delimitador `\t`. Frecuente en bioinformática y registros tabulares.
+- **Archivos delimitados por punto y coma (`read_csv2()`)**:
+  - Delimitador de columnas: punto y coma (`;`).
+  - Separador decimal: coma (`,`).
+  - Estándar habitual en Colombia, Latinoamérica y Europa.
+- **Delimitadores personalizados (`read_delim()`)**:
+  - Parámetro `delim`: permite indicar cualquier separador arbitrario (`|`, `:`, `-`, etc.).
+:::
+
+## Inferencia de tipos y función `spec()` {.smaller .center}
+
+:::: {.incremental}
+- Cuando no se especifican tipos, `readr` utiliza una **heurística**:
+  
+  > De forma predeterminada, inspecciona **$1000$ valores**, distribuidos uniformemente desde la primera hasta la última fila.
+
+- Esta heurística es rápida y efectiva.
+- La función `spec()` permite consultar la especificación que `readr` determinó para una tabla importada:
+  
+  :::: {.columns}
+
+  ::: {.column width="48%"}
+  ```{r}
+  #| eval: false
+  #| echo: true
+  # Consultar especificación de columnas ----
+  spec(pregrado_faedis_tbl)
+  ```
+  :::
+
+  ::: {.column width="52%"}
+  ```{r}
+  spec(pregrado_faedis_tbl)
+  ```
+  :::
+
+  ::::
+::::
+
+## Tipos explícitos con `col_types` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: true
+#| echo: true
+#| code-line-numbers: "|3-6|4-5|"
+read_csv(
+  file = I(pregrado_faedis_csv),
+  col_types = cols(
+    codigo_snies = col_integer(),
+    nombre_programa = col_character()
+  )
+)
+```
+:::
+
+::: {.column width="52%"}
+::: {.incremental}
+- `col_integer()`: enteros (`<int>`).
+- `col_double()`: reales (`<dbl>`).
+- `col_character()`: caracteres (`<chr>`).
+- `col_logical()`: booleanos (`<lgl>`).
+- `col_factor()`: variables categóricas (`<fct>`).
+- `col_date()`: fechas (`<date>`).
+- `col_skip()`: omite la columna durante la lectura.
+:::
+:::
+
+::::
+
+## Diagnóstico con `problems()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+::: {style="font-size: 77%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-9|3|11-18|15|20-21|"
+# Archivo con texto en columna numérica ----
+pregrado_invalido_csv <- "codigo_snies,nombre_programa
+Sin código,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Importar forzando la columna a entero ----
+pregrado_faedis_invalido <- read_csv(
+  file = I(pregrado_invalido_csv),
+  col_types = cols(
+    codigo_snies = col_integer(),
+    nombre_programa = col_character()
+  )
+)
+
+# Diagnosticar problemas ----
+problems(pregrado_faedis_invalido)
+```
+:::
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 65%;"}
+```{r}
+# Archivo con texto en columna numérica ----
+pregrado_invalido_csv <- "codigo_snies,nombre_programa
+Sin código,Administración de Empresas
+108241,\"Administración de Riesgos, Seguridad y Salud en el Trabajo\"
+11428,Contaduría Pública
+11004,Ingeniería Civil
+53703,Ingeniería Industrial
+105142,Ingeniería Informática
+10963,Relaciones Internacionales y Estudios Políticos"
+
+# Importar forzando la columna a entero ----
+pregrado_faedis_invalido <- read_csv(
+  file = I(pregrado_invalido_csv),
+  col_types = cols(
+    codigo_snies = col_integer(),
+    nombre_programa = col_character()
+  )
+)
+
+# Diagnosticar problemas ----
+problems(pregrado_faedis_invalido)
+```
+:::
+:::
+
+::::
+
+## Exportación a archivos de texto plano {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Exportar datos a .csv ----
+write_csv(
+  x = pregrado_faedis_tbl,
+  file = "data/pregrado_faedis.csv",
+  na = "NA",
+  col_names = TRUE
+)
+```
+:::
+
+::: {.column width="52%"}
+::: {.incremental}
+- **`x`**: tibble u objeto a guardar.
+- **`file`**: ruta y nombre del archivo destino.
+- **`na`**: texto para representar valores ausentes (por defecto `"NA"`).
+- **`col_names`**: incluir nombres de variables en la primera línea (`TRUE`).
+:::
+:::
+
+::::
+
+## Caso de estudio: Saber-Pro 2021 {.smaller .center}
+
+::: {.incremental}
+- Microdatos del examen: `2021-saber_pro-genericas.txt.xz`
+- **Compresión `.xz`**: `readr` la detecta automáticamente y realiza la descompresión transparente en memoria.
+- **Delimitador de columnas**: en DataIcfes los archivos `.txt` usan punto y coma (`;`) $\rightarrow$ se emplea `read_csv2()`.
+:::
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-4|6|"
+# Importar con read_csv2() ----
+saber_pro_genericas_2021 <- read_csv2(
+  file = "data/2021-saber_pro-genericas.txt.xz"
+)
+
+spec(saber_pro_genericas_2021)
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|7|"
+cols(
+  periodo = col_double(),
+  estu_consecutivo = col_character(),
+  estu_estudiante = col_character(),
+  estu_tipodocumento = col_character(),
+  ...
+  estu_fechanacimiento = col_character(),
+  ...
+)
+```
+
+::: {.incremental}
+- `estu_fechanacimiento` fue inferida como `col_character()`.
+:::
+:::
+
+::::
+
+## Incompatibilidad con `col_date()` {.smaller .center}
+
+::: {.incremental}
+- En el archivo, las fechas están en convención **día/mes/año** (`DD/MM/AAAA`), p. ej. `"05/10/1992"`.
+- Por defecto, `col_date()` asume la norma internacional **ISO 8601** (`AAAA-MM-DD` / `YYYY-MM-DD`).
+- Al no coincidir, `readr` convierte los valores a `NA` y emite advertencias:
+:::
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-7|4-6|5|9|"
+# Intento ingenuo con col_date() ----
+saber_pro_genericas_2021 <- read_csv2(
+  file = "data/2021-saber_pro-genericas.txt.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_date()
+  )
+)
+
+problems(saber_pro_genericas_2021)
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+#| message: false
+saber_pro_naive <- read_csv2(
+  file = "../data/2021-saber_pro-genericas.txt.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_date()
+  ),
+  n_max = 100
+)
+
+problems(saber_pro_naive) |>
+  head(10)
+```
+:::
+:::
+
+::::
+
+## Solución {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-9|5-7|11-12|"
+# Importar con formato explícito ----
+saber_pro_genericas_2021 <- read_csv2(
+  file = "data/2021-saber_pro-genericas.txt.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_date(
+      format = "%d/%m/%Y"
+    )
+  )
+)
+
+# Diagnosticar problemas ----
+problems(saber_pro_genericas_2021)
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+saber_pro_genericas_2021 <- read_csv2(
+  file = "../data/2021-saber_pro-genericas.txt.xz",
+  col_types = cols(
+    estu_fechanacimiento = col_date(
+      format = "%d/%m/%Y"
+    )
+  ),
+  n_max = 500
+)
+
+# Diagnosticar problemas ----
+problems(saber_pro_genericas_2021)
+```
+:::
+
+::: {.incremental}
+- `problems()` retorna una tibble vacía de `0 × 5`.
+- Todos los registros fueron interpretados correctamente como fechas (`<date>`).
+:::
+:::
+
+::::
+
+## Especificadores comunes fechas {.smaller .center}
+
+::: {style="font-size: 70%;"}
+| Especificador | Componente | Significado / Ejemplo |
+| :---: | :--- | :--- |
+| `%d` | Día | Día del mes con dos dígitos (`01` a `31`). |
+| `%e` | Día | Día del mes con espacio inicial opcional (`1` a `31`). |
+| `%m` | Mes | Mes del año con dos dígitos (`01` a `12`). |
+| `%b` | Mes | Nombre abreviado del mes según configuración regional (`ene.`, `feb.`). |
+| `%B` | Mes | Nombre completo del mes (`enero`, `febrero`). |
+| `%Y` | Año | Año con cuatro dígitos (`1992`, `2021`). |
+| `%y` | Año | Año con dos dígitos (`92`, `21`). |
+| `/`, `-`, `.` | Separador | Caracteres literales que actúan como separadores de fecha. |
+
+: Especificadores de formato para fechas en `readr` {#tbl-date-format .striped .hover}
+:::
+
+# Hojas de cálculo
+
+## Archivos `.xls` y `.xlsx` {.smaller .center}
+
+::: {.incremental}
+- El paquete `readxl` proporciona tres funciones:
+  1. **`read_xls()`**: importa archivos con extensión binaria propietaria `.xls` (Microsoft Excel anterior a 2007).
+  2. **`read_xlsx()`**: importa archivos con extensión OpenXML `.xlsx` (Microsoft Excel 2007 en adelante).
+  3. **`read_excel()`**: detecta automáticamente el formato del archivo y delega la lectura a `read_xls()` o `read_xlsx()`.
+- En la práctica, se utiliza habitualmente **`read_excel()`** por su flexibilidad.
+- El parámetro principal es **`path`**, que recibe la ruta al archivo.
+:::
+
+## Importación básica `read_excel()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-5|7-9|12|"
+# Cargar paquetes ----
+library(readxl)
+
+# Definir ruta ----
+path <- "data/serie-nacional-de-poblacion_area-sexo-edad_2018-2070_2025-07-18.xlsx"
+
+# Importar datos ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path
+)
+
+poblacion_col_2018_2070
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Cargar paquetes ----
+library(readxl)
+
+# Definir ruta ----
+path <- "../data/serie-nacional-de-poblacion_area-sexo-edad_2018-2070_2025-07-18.xlsx"
+
+# Importar datos ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path
+)
+
+poblacion_col_2018_2070
+```
+:::
+:::
+
+::::
+
+## Listar hojas con `excel_sheets()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Listar hojas de trabajo ----
+excel_sheets(
+  path = path
+)
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 75%;"}
+```{r}
+# Listar hojas de trabajo ----
+excel_sheets(
+  path = path
+)
+```
+:::
+
+::: {.incremental}
+- El archivo contiene 3 hojas: `"Índice"`, `"PPED"` y `"PobNacionalxÁreaSexoEdad"`.
+- Los datos demográficos de interés residen en la hoja `"PobNacionalxÁreaSexoEdad"`.
+:::
+:::
+
+::::
+
+## Parámetro `sheet` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-5|4|7|"
+# Importar hoja de trabajo ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad"
+)
+
+poblacion_col_2018_2070
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+# Importar hoja de trabajo ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad"
+)
+
+poblacion_col_2018_2070
+```
+:::
+:::
+
+::::
+
+## Parámetro `skip` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-6|5|8|"
+# Omitir filas iniciales ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  skip = 8
+)
+
+poblacion_col_2018_2070
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+# Omitir filas iniciales ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  skip = 8
+)
+
+poblacion_col_2018_2070
+```
+:::
+:::
+
+::::
+
+## Renombrar columnas con `rename()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-11|7-11|8-10|13|"
+# Renombrar columnas ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  skip = 8
+) |>
+  rename(
+    territorio = `...1`,
+    ano = `...2`,
+    area_geografica = `...3`
+  )
+
+poblacion_col_2018_2070
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+# Renombrar columnas ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  skip = 8
+) |>
+  rename(
+    territorio = `...1`,
+    ano = `...2`,
+    area_geografica = `...3`
+  )
+
+poblacion_col_2018_2070
+```
+:::
+:::
+
+::::
+
+## Parámetro `range` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-11|5|13|"
+# Delimitar rango de celdas ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  range = "A9:F128"
+) |>
+  rename(
+    territorio = `...1`,
+    ano = `...2`,
+    area_geografica = `...3`
+  )
+
+poblacion_col_2018_2070
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+# Delimitar rango de celdas ----
+poblacion_col_2018_2070 <- read_excel(
+  path = path,
+  sheet = "PobNacionalxÁreaSexoEdad",
+  range = "A9:F128"
+) |>
+  rename(
+    territorio = `...1`,
+    ano = `...2`,
+    area_geografica = `...3`
+  )
+
+poblacion_col_2018_2070
+```
+:::
+:::
+
+::::
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
