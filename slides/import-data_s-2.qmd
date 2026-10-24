@@ -1,0 +1,985 @@
+---
+title: Importación de datos
+subtitle: Sesión 2
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+    reference-location: document
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+library(tidyverse)
+library(sf)
+```
+
+# Preliminares
+
+## {.smaller .center}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿El archivo `2021-2024_saber-pro-genericas_faedis_ajustado.rds` fue incluído en `data`? 
+
+- Generar carpetas:
+
+  - `015_importar-datos-gpkg-en-r`
+
+    - Crear archivo `001_importar-datos-formato-gpkg.R`
+
+- Descargar datos:
+
+  - `nivel-departamento_version-mgn-2025_geopackage.gpkg`
+
+     - Agregar en `data`
+:::
+
+# Mapa coroplético
+
+##
+
+```{r}
+#| label: fig-choropleth-final
+#| fig-cap: Resultado final de un mapa coroplético elaborado con `sf` y `ggplot2` a partir de datos geoestadísticos en formato `.gpkg`
+#| fig-height: 5.5
+#| fig-align: center
+#| lightbox: true
+#| echo: false
+
+# Import data ----
+col_dpto_sf <- read_sf(
+  dsn = "../data/nivel-departamento_version-mgn-2025_geopackage.gpkg"
+)
+
+resultado_saber_pro_ajustado <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+
+# Select ----
+col_dpto_sf <- col_dpto_sf |>
+  select(
+    dpto_ccdgo,
+    dpto_cnmbr,
+    geom
+  )
+
+resultado_saber_pro_ajustado <- resultado_saber_pro_ajustado |>
+  count(
+    estu_cod_depto_presentacion
+  )
+
+## Auxiliary variables ----
+n_na <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  last()
+
+n_total <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  sum()
+
+# Mutating joins ----
+col_dpto_saber_pro_n <- col_dpto_sf |>
+  left_join(
+    y = resultado_saber_pro_ajustado,
+    by = join_by(
+      dpto_ccdgo == estu_cod_depto_presentacion
+    )
+  )
+
+# Clean ----
+col_dpto_saber_pro_n <- col_dpto_saber_pro_n |>
+  replace_na(
+    replace = list(
+      n = 0
+    )
+  )
+
+## Auxiliary variables ----
+n_min <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  min()
+
+n_max <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  max()
+
+# Visualization ----
+## Breaks
+breaks <- seq.int(
+  from = log1p(n_min),
+  to = log1p(n_max),
+  length.out = 5
+) |>
+  expm1() |>
+  round()
+
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  ) +
+  labs(
+    fill = str_glue(
+      "Número estudiantes
+  (Escala logarítmica)"
+    ),
+    title = str_glue(
+      "Número inscritos Saber Pro FAEDIS por departamento (n = {n_total - n_na})"
+    ),
+    subtitle = str_glue(
+      "Periodo: 2021-2024
+    Nota: Excluye inscritos en el exterior (n = {n_na})"
+    ),
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme_void()
+```
+
+# El formato `.gpkg`
+
+## Formato GeoPackage (`.gpkg`) {.smaller .center}
+
+::: {.incremental}
+- Tradicionalmente, el formato más empleado en los Sistemas de Información Geográfica (SIG) fue el **Shapefile** (`.shp`), el cual presenta diversas limitaciones técnicas [@jachym_shapefile_2017].
+- El formato **GeoPackage (`.gpkg`)** surge para superar estas restricciones:
+  - Almacena toda la información espacial (vectores, rásteres) y tablas de atributos asociadas dentro de un **único archivo**.
+  - Por "debajo", un archivo `.gpkg` es una base de datos **SQLite** ligera, autónoma y portable.
+  - Es de naturaleza **abierta, no propietaria e independiente de plataforma**, utilizable sin licencias comerciales y con total soporte en R.
+:::
+
+## Open Geospatial Consortium (OGC) {.smaller .center}
+
+::: {.incremental}
+- La apertura e interoperabilidad del formato es impulsada por el **[Open Geospatial Consortium (OGC)](https://www.ogc.org/about/overview/)**:
+  - Consorcio internacional sin fines de lucro fundado en 1994, compuesto por organizaciones gubernamentales, empresas y universidades.
+  - Su misión es definir consensos técnicos y **estándares abiertos** para que la información geoespacial sea accesible, interoperable y reutilizable.
+- El estándar oficial **[OGC GeoPackage](https://www.ogc.org/standards/geopackage/)** garantiza la transferencia fluida de datos espaciales entre diferentes aplicaciones SIG, bases de datos y lenguajes de programación.
+:::
+
+## Fuentes cartográficas en Colombia {.smaller .center}
+
+::: {.incremental}
+Existen 2 plataformas oficiales para consultar y descargar información geográfica de Colombia en formatos abiertos como `.gpkg`:
+
+1. **[Geoportal del Departamento Administrativo Nacional de Estadística (DANE)](https://geoportal.dane.gov.co/servicios/descarga-y-metadatos/datos-geoestadisticos/)**:
+   - Ofrece el **Marco Geoestadístico Nacional (MGN)** para referenciar datos estadísticos con su ubicación territorial (departamentos, municipios, cabeceras, centros poblados).
+   - De allí proviene el archivo departamental utilizado en esta sesión.
+
+2. **[Portal de información geoespacial - Colombia en Mapas](https://www.colombiaenmapas.gov.co/inicio/)**:
+   - Administrado por el Instituto Geográfico Agustín Codazzi (IGAC) junto con la Infraestructura Colombiana de Datos Espaciales (ICDE).
+   - Centraliza y permite explorar capas temáticas geoespaciales de entidades públicas en formatos abiertos.
+:::
+
+# Importación de datos en formato `.gpkg`
+
+## Importar datos espaciales {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-7|9|"
+# Cargar paquetes ----
+library(sf)
+
+# Importar datos espaciales ----
+col_dpto_sf <- read_sf(
+  dsn = "data/nivel-departamento_version-mgn-2025_geopackage.gpkg"
+)
+
+col_dpto_sf
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 60%;"}
+```{r}
+# Importar datos espaciales ----
+col_dpto_sf <- read_sf(
+  dsn = "../data/nivel-departamento_version-mgn-2025_geopackage.gpkg"
+)
+
+col_dpto_sf
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- La función `read_sf()` del paquete `sf` utiliza el parámetro `dsn` (*Data Source Name*) para especificar la ruta del archivo `.gpkg`.
+:::
+
+## Estructura de un objeto `sf` {.smaller .center}
+
+::: {.incremental}
+- El paquete `sf` implementa el estándar internacional **Simple Features** del OGC.
+- Un objeto `sf` es en esencia una `tibble` de R extendida con capacidades geográficas:
+  1. **Encabezado de metadatos espaciales**:
+     - `Simple feature collection`: número de geometrías (*features*, $33$) y atributos (*fields*, $8$).
+     - `Geometry type`: `MULTIPOLYGON` (adecuado para departamentos con fragmentos territoriales discontinuos o islas).
+     - `Dimension`: `XY` (coordenadas de longitud y latitud en 2 dimensiones).
+     - `Bounding box`: caja delimitadora de coordenadas extremas (`xmin`, `ymin`, `xmax`, `ymax`).
+     - `Geodetic CRS`: Sistema de Referencia de Coordenadas (`WGS 84`).
+:::
+
+## Estructura de un objeto `sf` {.smaller .center}
+
+::: {.incremental}
+- Un objeto `sf` es en esencia una `tibble` de R extendida con capacidades geográficas:
+
+  2. **Tabla de datos**:
+
+     - Columnas tradicionales de atributos no espaciales.
+     - Columna especial de lista (**geometry list-column**, `geom`) con clase `<MULTIPOLYGON [°]>` que contiene las secuencias de coordenadas en grados decimales.
+  
+       ::: {.callout-note}
+       Para profundizar en los fundamentos conceptuales de los sistemas de coordenadas y la estructura cartográfica de un objeto `sf`,  puedes consultar [@lovelace_geocomputation_2025, Cap. 2].
+       :::
+
+  - Al ser una `tibble`, un objeto `sf` se puede manipular directamente con las funciones conocidas del `tidyverse` (`select()`, `left_join()`, `mutate()`) y visualizarse de forma integrada con `ggplot2`.
+:::
+
+## Importar variables no espaciales {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-4|6|"
+# Importar variables no espaciales ----
+resultado_saber_pro_ajustado <- read_rds(
+  file = "data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+
+resultado_saber_pro_ajustado
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 60%;"}
+```{r}
+# Importar variables no espaciales ----
+resultado_saber_pro_ajustado <- read_rds(
+  file = "../data/2021-2024_saber-pro-genericas_faedis_ajustado.rds"
+)
+
+resultado_saber_pro_ajustado
+```
+:::
+:::
+
+::::
+
+## Seleccionar variables y contar observaciones {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="62%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-7|9-13|"
+# Seleccionar ----
+col_dpto_sf <- col_dpto_sf |>
+  select(
+    dpto_ccdgo,
+    dpto_cnmbr,
+    geom
+  )
+
+# Contar ----
+resultado_saber_pro_ajustado <- resultado_saber_pro_ajustado |>
+  count(
+    estu_cod_depto_presentacion
+  )
+```
+:::
+
+::: {.column width="38%"}
+::: {style="font-size: 85%;"}
+```{r}
+# Seleccionar ----
+col_dpto_sf <- col_dpto_sf |>
+  select(
+    dpto_ccdgo,
+    dpto_cnmbr,
+    geom
+  )
+
+# Contar ----
+resultado_saber_pro_ajustado <- resultado_saber_pro_ajustado |>
+  count(
+    estu_cod_depto_presentacion
+  )
+
+resultado_saber_pro_ajustado
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- `select()` conserva únicamente las columnas de interés en el objeto espacial (`dpto_ccdgo`, `dpto_cnmbr`, `geom`).
+- `count()` agrupa y calcula la cantidad de estudiantes por departamento en la columna `n`. Los registros en el exterior quedan como `NA` en la última fila.
+:::
+
+## Crear variables auxiliares {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-4|6-9|"
+# Variables auxiliares ----
+n_na <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  last()
+
+n_total <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  sum()
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 100%;"}
+```{r}
+# Variables auxiliares ----
+n_na <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  last()
+
+n_total <- resultado_saber_pro_ajustado |>
+  pull(n) |>
+  sum()
+
+tibble(
+  variable = c("n_na (exterior)", "n_total (inscritos)"),
+  valor = c(n_na, n_total)
+)
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- `pull(n)` extrae la columna `n` como un vector numérico.
+- `last()` extrae el último valor del vector, correspondiente al número de inscritos en el exterior (`n_na = 24`).
+- `sum()` suma todos los elementos para obtener el total de estudiantes (`n_total = 1681`).
+:::
+
+## Consolidar tablas y tratar valores ausentes {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-8|10-16|"
+# Consolidar tablas ----
+col_dpto_saber_pro_n <- col_dpto_sf |>
+  left_join(
+    y = resultado_saber_pro_ajustado,
+    by = join_by(
+      dpto_ccdgo == estu_cod_depto_presentacion
+    )
+  )
+
+# Limpiar valores ausentes ----
+col_dpto_saber_pro_n <- col_dpto_saber_pro_n |>
+  replace_na(
+    replace = list(
+      n = 0
+    )
+  )
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+# Consolidar tablas ----
+col_dpto_saber_pro_n <- col_dpto_sf |>
+  left_join(
+    y = resultado_saber_pro_ajustado,
+    by = join_by(
+      dpto_ccdgo == estu_cod_depto_presentacion
+    )
+  )
+
+# Limpiar valores ausentes ----
+col_dpto_saber_pro_n <- col_dpto_saber_pro_n |>
+  replace_na(
+    replace = list(
+      n = 0
+    )
+  )
+
+col_dpto_saber_pro_n |>
+  select(dpto_ccdgo, dpto_cnmbr, n) |>
+  slice_head(n = 5)
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- `left_join()` conserva los 33 departamentos de `col_dpto_sf` vinculando la columna `n`.
+- `replace_na(replace = list(n = 0))` sustituye los `NA` por `0` en aquellos departamentos sin estudiantes registrados.
+:::
+
+## Inspeccionar datos consolidados {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Inspeccionar datos ----
+glimpse(col_dpto_saber_pro_n)
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+glimpse(col_dpto_saber_pro_n)
+```
+:::
+:::
+
+::::
+
+::: {.incremental}
+- `col_dpto_saber_pro_n` queda listo con 33 observaciones y las 4 variables necesarias: `dpto_ccdgo`, `dpto_cnmbr`, `geom` y `n`.
+:::
+
+# Visualización de datos geoespaciales
+
+## Datos, mapeo y capas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|2|3|4-10|5-8|9|"
+# Visualización ----
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  )
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 6
+#| fig-align: center
+#| fig-cap: Representación base del mapa coroplético utilizando `geom_sf()` con relleno según el número de estudiantes
+#| lightbox: true
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  )
+```
+:::
+
+::::
+
+## Componentes de `geom_sf()` {.smaller .center}
+
+::: {.incremental}
+- **`geom_sf()`**: geometría especializada de `ggplot2` para visualizar objetos `sf`.
+- **`geometry = geom`**: atributo estético que contiene la información geográfica del objeto (las secuencias de coordenadas).
+- **Proyección de coordenadas**: `geom_sf()` incorpora automáticamente `coord_sf()`, asegurando que los polígonos se proyecten respetando el Sistema de Referencia de Coordenadas (CRS) sin distorsionar proporciones.
+- **`fill = n`**: mapeo estético dependiente de los datos asignado al relleno interior de cada departamento.
+- **`color = "black"`**: parámetro fijo fuera de `aes()` que delinea las fronteras departamentales con un contorno negro constante.
+:::
+
+## El problema del valor atípico (*outlier*) {.smaller .center}
+
+::: {.incremental}
+- Al observar el mapa base, se evidencia una limitación visual:
+  - Bogotá D.C. registra **$825$** inscritos.
+  - La mayoría de los demás departamentos tienen valores notablemente menores ($0$ en Guaviare, $3$ en Córdoba, $6$ en Cauca, $24$ en Antioquia, $34$ en Boyacá).
+- En una **escala lineal convencional**, la distancia entre $0$ y $825$ comprime todos los valores bajos hacia el extremo inferior de la paleta.
+- Como resultado, casi todos los departamentos presentan el mismo tono idéntico e indistinguible, impidiendo percibir diferencias relativas.
+:::
+
+## Escala logarítmica y el caso del cero {.smaller .center}
+
+::: {.incremental}
+- La **escala lineal** mide incrementos aditivos ($+10, +20, +30$).
+- La **escala logarítmica** mide órdenes de magnitud multiplicativos ($\times 10, \times 100, \times 1000$).
+- **Restricción matemática**: $\log_e(0)$ no está definido ($\log_e(0) \to -\infty$). Como hay departamentos con $n = 0$, no se puede aplicar directamente $\log_e(x)$.
+- **Solución con `log1p`**: la transformación $\log_e(x + 1)$ garantiza que:
+  $$
+  \log_e(0 + 1) = \log_e(1) = 0
+  $$
+- **Función inversa `expm1`**: para recuperar las unidades originales y construir las marcas de la leyenda:
+  $$
+  y = \log_e(x + 1) \iff x = e^y - 1
+  $$
+:::
+
+## Escala lineal vs escala logarítmica {.center .smaller}
+
+```{r}
+#| label: fig-comparison-linear-log-scales
+#| fig-cap: Comparación gráfica entre la distribución de valores en una escala lineal (superior) y una escala logarítmica transformada con $\log_e(x + 1)$ (inferior)
+#| fig-height: 4.5
+#| fig-align: center
+#| lightbox: true
+#| echo: false
+
+scales_demo <- tibble(
+  valor = c(0, 30, 100, 1000),
+  x_lineal = valor,
+  x_log = log1p(valor)
+)
+
+scales_data_plot <- bind_rows(
+  scales_demo |>
+    mutate(
+      escala = "Escala lineal: x",
+      pos = x_lineal,
+      valor_label = as.character(valor),
+      .keep = "none"
+    ),
+  scales_demo |>
+    mutate(
+      escala = "Escala logarítmica: logₑ(x + 1)",
+      pos = x_log,
+      valor_label = str_glue("{valor} ({round(pos, 2)})"),
+      .keep = "none"
+    )
+) |>
+  mutate(
+    escala = factor(
+      x = escala,
+      levels = unique(escala)
+    )
+  )
+
+scales_data_plot |>
+  ggplot(
+    aes(x = pos, y = 0)
+  ) +
+  geom_hline(
+    yintercept = 0,
+    color = "#2c3e50",
+    linewidth = 0.8
+  ) +
+  geom_point(
+    color = "black",
+    fill = "#18bc9c",
+    shape = 21,
+    size = 3
+  ) +
+  geom_text(
+    aes(label = valor_label),
+    angle = 90,
+    hjust = 0,
+    vjust = 0.5,
+    nudge_y = 0.05,
+    size = 4
+  ) +
+  scale_y_continuous(
+    limits = c(-0.1, 0.8)
+  ) +
+  facet_wrap(
+    facets = vars(escala),
+    scales = "free_x",
+    ncol = 1
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    axis.ticks = element_blank(),
+    axis.text.x = element_text(
+      size = 11
+    ),
+    axis.text.y = element_blank(),
+    strip.text = element_text(
+      face = "bold",
+      size = 13
+    )
+  )
+```
+
+## Escala logarítmica {.smaller .center}
+
+::: {.callout-note}
+Para una explicación conceptual intuitiva y visual sobre los logaritmos y su utilidad al visualizar órdenes de magnitud, puedes consultar el video [Logarithms, Clearly Explained](https://youtu.be/VSi0Z04fWj0?si=7jzQYZtubEtJNPvx) del canal [StatQuest with Josh Starmer](https://www.youtube.com/@statquest).
+:::
+
+::: {.incremental}
+- La transformación $\log_e(x + 1)$ permite discriminar visualmente departamentos con pocas observaciones sin perder la magnitud relativa del valor máximo.
+:::
+
+## Variables auxiliares y cortes (`breaks`) {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-9|2-5|7-9|11-20|"
+# Variables auxiliares ----
+## Mínimo y máximo ----
+n_min <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  min()
+
+n_max <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  max()
+
+## Breaks ----
+breaks <- seq.int(
+  from = log1p(n_min),
+  to = log1p(n_max),
+  length.out = 5
+) |>
+  expm1() |>
+  round()
+
+breaks
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 100%;"}
+```{r}
+# Variables auxiliares ----
+## Mínimo y máximo ----
+n_min <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  min()
+
+n_max <- col_dpto_saber_pro_n |>
+  pull(n) |>
+  max()
+
+## Breaks ----
+breaks <- seq.int(
+  from = log1p(n_min),
+  to = log1p(n_max),
+  length.out = 5
+) |>
+  expm1() |>
+  round()
+
+breaks
+```
+:::
+
+::: {.incremental}
+\
+\
+\
+\
+
+- `seq.int()` genera 5 puntos equidistantes en el espacio logarítmico entre `log1p(0)` y `log1p(825)`.
+- `expm1()` devuelve los valores a la escala natural
+- `round()` genera números enteros limpios para las marcas de la leyenda.
+:::
+:::
+
+::::
+
+## Aplicación de la escala de color {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|10-15|11|12|13|14|"
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  )
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 6
+#| fig-align: center
+#| lightbox: true  
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  )
+```
+:::
+
+::::
+
+::: {.incremental}
+- `palette = "Blues"`: aplica una paleta secuencial de ColorBrewer.
+- `direction = 1`: orienta la paleta de modo que mayor cantidad corresponda a un azul más oscuro.
+- `transform = "log1p"` y `breaks = breaks`: distribuyen el color en escala logarítmica con marcas legibles.
+:::
+
+## Aplicación de etiquetas informativas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="65%"}
+::: {style="font-size: 80%;"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|16-29|17-20|21-23|24-27|"
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  ) +
+  labs(
+    fill = str_glue(
+      "Número estudiantes
+  (Escala logarítmica)"
+    ),
+    title = str_glue(
+      "Número inscritos Saber Pro FAEDIS por departamento (n = {n_total - n_na})"
+    ),
+    subtitle = str_glue(
+      "Periodo: 2021-2024
+    Nota: Excluye inscritos en el exterior (n = {n_na})"
+    ),
+    caption = "Fuente: Data Icfes"
+  )
+```
+:::
+:::
+
+::: {.column width="35%"}
+```{r}
+#| echo: false
+#| fig-height: 6
+#| fig-align: center
+#| lightbox: true
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  ) +
+  labs(
+    fill = str_glue(
+      "Número estudiantes
+  (Escala logarítmica)"
+    ),
+    title = str_glue(
+      "Número inscritos Saber Pro FAEDIS por departamento (n = {n_total - n_na})"
+    ),
+    subtitle = str_glue(
+      "Periodo: 2021-2024
+    Nota: Excluye inscritos en el exterior (n = {n_na})"
+    ),
+    caption = "Fuente: Data Icfes"
+  )
+```
+::: {.incremental}
+- `str_glue()` permite intercalar variables de R dentro de llaves `{ }` calculando dinámicamente subtotales.
+:::
+:::
+
+::::
+
+
+## Aplicación del tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|30|"
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  ) +
+  labs(
+    fill = str_glue(
+      "Número estudiantes
+  (Escala logarítmica)"
+    ),
+    title = str_glue(
+      "Número inscritos Saber Pro FAEDIS por departamento (n = {n_total - n_na})"
+    ),
+    subtitle = str_glue(
+      "Periodo: 2021-2024
+    Nota: Excluye inscritos en el exterior (n = {n_na})"
+    ),
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme_void()
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 6
+#| fig-align: center
+#| lightbox: true
+col_dpto_saber_pro_n |>
+  ggplot() +
+  geom_sf(
+    mapping = aes(
+      geometry = geom,
+      fill = n
+    ),
+    color = "black"
+  ) +
+  scale_fill_distiller(
+    palette = "Blues",
+    direction = 1,
+    transform = "log1p",
+    breaks = breaks
+  ) +
+  labs(
+    fill = str_glue(
+      "Número estudiantes
+  (Escala logarítmica)"
+    ),
+    title = str_glue(
+      "Número inscritos Saber Pro FAEDIS por departamento (n = {n_total - n_na})"
+    ),
+    subtitle = str_glue(
+      "Periodo: 2021-2024
+    Nota: Excluye inscritos en el exterior (n = {n_na})"
+    ),
+    caption = "Fuente: Data Icfes"
+  ) +
+  theme_void()
+```
+::: {.incremental}
+- `theme_void()` remueve cuadrículas cartesianas, ejes y fondos innecesarios, enfocando la atención exclusivamente en las formas geográficas y la intensidad del color.
+:::
+:::
+::::
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
