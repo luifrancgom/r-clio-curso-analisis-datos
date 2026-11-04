@@ -1,0 +1,836 @@
+---
+title: Organización y limpieza de datos
+subtitle: Sesión 2
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+    reference-location: document
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+library(tidyverse)
+library(scales)
+```
+
+# Preliminares
+
+## {.smaller .center}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿El archivo `poblacion_col_2018_2070_largo.rds` fue incluido en `data`?
+
+- Generar carpetas:
+
+  - `018_separar-unir-caracteres-cols-en-r`
+
+    - Crear archivo `001_separar-unir-caracteres-cols.R`
+:::
+
+# Separación y unión de caracteres en columnas 
+
+## Separar caracteres en columnas {.smaller .center}
+
+::: {.incremental}
+- En datos no ordenados es común encontrar **múltiples variables combinadas dentro de una sola columna** (p. ej. códigos como `m_014` o `f_1524`).
+- Para asegurar que **cada variable conforme su propia columna**, el paquete `tidyr` proporciona la familia de funciones `separate_wider_*()` [@wickham_r_2023, Cap. 5].
+- Existen 3 alternativas especializadas según el criterio de división:
+  1. **`separate_wider_delim()`**: separa columnas a partir de un **delimitador o carácter fijo** (guion bajo `_`, coma `,`, guion `-`, etc.).
+  2. **`separate_wider_position()`**: separa basándose en **anchos o posiciones numéricas fijas** de caracteres (ideal para archivos de ancho fijo).
+  3. **`separate_wider_regex()`**: separa mediante **patrones de expresiones regulares** (en inglés **regex**), ofreciendo máxima flexibilidad ante estructuras complejas.
+:::
+
+## Separar caracteres en columnas {.smaller .center}
+
+![Representación gráfica de la función `separate_wider_delim()`](../images/separate-wider.png){.lightbox #fig-separate-wider-diag height="320px"}
+
+::: {.fragment}
+La columna compuesta `name` (con valores como `m_014` y `f_014`) se divide a partir del delimitador `_` en dos columnas rectangulares independientes: `sexo` y `edad`.
+:::
+
+## Unir múltiples columnas mediante concatenación de caracteres {.smaller .center}
+
+::: {.incremental}
+- La función `unite()` de `tidyr` realiza la **operación inversa** a la familia `separate_wider_*()`.
+- Toma dos o más columnas y las combina o concatena en una sola columna de caracteres uniendo sus valores mediante un delimitador común.
+- Parámetros principales de `unite()`:
+
+  ::: {style="font-size: 80%;"}
+  - **`data`**: la tibble sobre la cual se aplicará la transformación.
+  - **`col`**: el nombre de la nueva columna resultante.
+  - **`...`**: las columnas que se desean unir (admite nombres directos, rangos con `:` o selectores auxiliares).
+  - **`sep`**: separador insertado entre los valores unidos (por defecto guion bajo `_`).
+  - **`remove`**: valor lógico (`TRUE` por defecto) para eliminar las columnas originales.
+  - **`na.rm`**: valor lógico (`FALSE` por defecto) para omitir valores `NA`.
+  :::
+:::
+
+## Unir múltiples columnas mediante concatenación de caracteres {.smaller .center}
+
+![Representación gráfica de la función `unite()`](../images/unite.png){.lightbox #fig-unite-diag height="320px"}
+
+::: {.fragment}
+Dos columnas independientes (`sexo` y `edad`) se fusionan en una única variable compuesta (`name`) mediante el delimitador especificado (`sep = "_"`).
+:::
+
+# Caso de estudio: separar caracteres en columnas, transformar y preparar datos para generar pirámides poblacionales de Colombia
+
+## Caso de estudio {.smaller .center}
+
+::: {.incremental}
+- **Contexto**: en la sesión anterior transformamos las proyecciones poblacionales del DANE (2018–2070) a formato largo en `poblacion_col_2018_2070_largo.rds`.
+- **Objetivo**: completar el procesamiento de los datos en 3 etapas sucesivas:
+  1. **Separar**: dividir la columna compuesta `genero_edad` en `genero` y `edad` mediante `separate_wider_delim()`.
+  2. **Transformar**: asociar los tipos correctos (`as.integer()`) y calcular la participación porcentual (`poblacion / total`) con `mutate()`.
+  3. **Preparar**: discretizar edades en cohortes quinquenales con `cut()` y consolidar totales y porcentajes con `group_by()` y `summarize()`.
+:::
+
+## Importar datos en formato largo {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-8|"
+# Cargar paquetes ----
+library(tidyverse)
+
+# Importar datos ----
+poblacion_col_2018_2070_largo <- read_rds(
+  file = "data/poblacion_col_2018_2070_largo.rds"
+)
+
+poblacion_col_2018_2070_largo
+```
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 65%;"}
+```{r}
+# Importar datos ----
+poblacion_col_2018_2070_largo <- read_rds(
+  file = "../data/poblacion_col_2018_2070_largo.rds"
+)
+
+poblacion_col_2018_2070_largo
+```
+:::
+:::
+
+::::
+
+## Separar caracteres en columnas {.smaller .center}
+
+::: {.incremental}
+- En la columna `genero_edad`, cada celda contiene etiquetas compuestas como `"hombres_0_anos"` o `"mujeres_100_anos_y_mas"`.
+- El primer segmento define el género (`"hombres"` o `"mujeres"`), el segundo la edad numérica (`0`, ..., `100`), y el resto corresponde a sufijos redundantes (`"anos"`, `"ano"`, `"anos_y_mas"`).
+- Empleamos `separate_wider_delim()` con:
+  - `cols = genero_edad`
+  - `delim = "_"`
+  - `names = c("genero", "edad")`
+  - **`too_many = "drop"`**: conserva los 2 primeros elementos extraídos y descarta los fragmentos sobrantes posteriores.
+:::
+
+## Separar caracteres en columnas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="65%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-8|"
+# Separar ----
+poblacion_col_2018_2070_separar <- poblacion_col_2018_2070_largo |>
+  separate_wider_delim(
+    cols = genero_edad,
+    delim = "_",
+    names = c("genero", "edad"),
+    too_many = "drop"
+  )
+
+poblacion_col_2018_2070_separar
+```
+:::
+
+::: {.column width="35%"}
+::: {style="font-size: 65%;"}
+```{r}
+poblacion_col_2018_2070_separar <- poblacion_col_2018_2070_largo |>
+  separate_wider_delim(
+    cols = genero_edad,
+    delim = "_",
+    names = c("genero", "edad"),
+    too_many = "drop"
+  )
+
+poblacion_col_2018_2070_separar
+```
+:::
+:::
+
+::::
+
+## Transformar variables {.smaller .center}
+
+::: {.incremental}
+- Tras la separación, la columna `edad` es de tipo carácter (`<chr>`) y la columna `ano` requiere confirmarse como entero.
+- Para comparar adecuadamente las pirámides demográficas entre periodos con tamaños absolutos diferentes, se calcula la **proporción porcentual**
+
+- Con `mutate()`:
+  - `ano = as.integer(ano)`
+  - `edad = as.integer(edad)`
+  - `poblacion_pct = poblacion / total` (medida estandarizada en $[0, 1]$).
+:::
+
+## Transformar variables {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="65%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-8|10"
+# Transformar ----
+poblacion_col_2018_2070_transformar <- poblacion_col_2018_2070_separar |>
+  mutate(
+    ano = as.integer(ano),
+    edad = as.integer(edad),
+    poblacion_pct = poblacion / total
+  )
+
+poblacion_col_2018_2070_transformar
+```
+:::
+
+::: {.column width="35%"}
+::: {style="font-size: 65%;"}
+```{r}
+poblacion_col_2018_2070_transformar <- poblacion_col_2018_2070_separar |>
+  mutate(
+    ano = as.integer(ano),
+    edad = as.integer(edad),
+    poblacion_pct = poblacion / total
+  )
+
+poblacion_col_2018_2070_transformar
+```
+:::
+:::
+
+::::
+
+## Preparar datos para visualizarlos {.smaller .center}
+
+::: {.incremental}
+- En demografía, las edades se agrupan en **cohortes quinquenales**: `0-4`, `5-9`, ..., `80-84` y `85+`.
+- La función `cut()` discretiza la variable `edad`:
+  - `breaks = c(seq.int(0, 85, 5), "Inf")`: cortes cada 5 años hasta infinito.
+  - `labels`: secuencia generada con `str_c(seq(0, 80, 5), seq(4, 85, 5), sep = "-")` agregando `"85+"`.
+  - `right = FALSE`: intervalos $[0, 5)$, abarcando de 0 a 4 años cumplidos.
+- Posteriormente, con `group_by(ano, genero, rango_edad)` y `summarize()`, sumamos la población absoluta y su porcentaje relativo.
+:::
+
+## Preparar datos para visualizarlos {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-18|3|4-18|19|20|21-25|27|"
+# Preparar datos ----
+poblacion_col_2018_2070_preparar <- poblacion_col_2018_2070_transformar |>
+  group_by(ano, genero) |>
+  mutate(
+    rango_edad = cut(
+      edad,
+      breaks = c(seq.int(0, 85, 5), "Inf"),
+      labels = c(
+        str_c(
+          seq(0, 80, 5),
+          seq(4, 85, 5),
+          sep = "-"
+        ),
+        "85+"
+      ),
+      right = FALSE
+    )
+  ) |>
+  ungroup() |>
+  group_by(ano, genero, rango_edad) |>
+  summarize(
+    poblacion = sum(poblacion),
+    poblacion_pct = sum(poblacion_pct),
+    .groups = "drop"
+  )
+
+poblacion_col_2018_2070_preparar
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+poblacion_col_2018_2070_preparar <- poblacion_col_2018_2070_transformar |>
+  group_by(ano, genero) |>
+  mutate(
+    rango_edad = cut(
+      edad,
+      breaks = c(seq.int(0, 85, 5), "Inf"),
+      labels = c(
+        str_c(seq(0, 80, 5), seq(4, 85, 5), sep = "-"),
+        "85+"
+      ),
+      right = FALSE
+    )
+  ) |>
+  ungroup() |>
+  group_by(ano, genero, rango_edad) |>
+  summarize(
+    poblacion = sum(poblacion),
+    poblacion_pct = sum(poblacion_pct),
+    .groups = "drop"
+  )
+
+poblacion_col_2018_2070_preparar
+```
+:::
+:::
+
+::::
+
+# Caso de estudio: visualizar datos a través de pirámides poblacionales de Colombia
+
+## Propósito de la visualización {.smaller .center}
+
+::: {.incremental}
+- El ordenamiento y la preparación de datos tienen como fin responder a preguntas analíticas y comunicar patrones claros.
+- A través de las **pirámides poblacionales** analizaremos la dinámica demográfica de Colombia en el periodo 2018–2070:
+  - La evolución de las cohortes generacionales a lo largo del tiempo.
+  - La contracción de la base de la pirámide asociada a la disminución en la tasa de natalidad.
+  - El progresivo proceso de envejecimiento poblacional y la ampliación de la cúspide etaria.
+:::
+
+## Selección de años de interés {.smaller .center}
+
+::: {.incremental}
+- El horizonte de proyecciones comprende **53 periodos anuales** (2018 a 2070).
+- Graficar todos los años saturaría la visualización, por lo que seleccionamos 4 hitos representativos calculados dinámicamente con variables auxiliares:
+  1. `pull(ano)`: extrae el vector numérico de años.
+  2. `min()` y `max()`: halla el inicio ($2018$) y el fin ($2070$).
+  3. `seq.int(ano_min, ano_max, length.out = 4)`: calcula 4 momentos equidistantes: **2018, 2035, 2052 y 2070**.
+  4. `filter(ano %in% filtrar_ano)`: filtra la tibble únicamente a esos 4 años.
+:::
+
+## Selección de años de interés {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-4|6-7|9-14|6-19|21|"
+# Filtrar ----
+## Variables auxiliares ----
+ano <- poblacion_col_2018_2070_preparar |>
+  pull(ano)
+
+ano_min <- min(ano)
+ano_max <- max(ano)
+
+filtrar_ano <- seq.int(
+  from = ano_min,
+  to = ano_max,
+  length.out = 4
+) |>
+  as.integer()
+
+poblacion_col_filtrar <- poblacion_col_2018_2070_preparar |>
+  filter(
+    ano %in% filtrar_ano
+  )
+
+poblacion_col_filtrar
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 65%;"}
+```{r}
+ano <- poblacion_col_2018_2070_preparar |>
+  pull(ano)
+
+ano_min <- min(ano)
+ano_max <- max(ano)
+
+filtrar_ano <- seq.int(
+  from = ano_min,
+  to = ano_max,
+  length.out = 4
+) |>
+  as.integer()
+
+poblacion_col_filtrar <- poblacion_col_2018_2070_preparar |>
+  filter(
+    ano %in% filtrar_ano
+  )
+
+poblacion_col_filtrar
+```
+:::
+:::
+
+::::
+
+## Creación de pirámides poblacionales {.smaller .center}
+
+Para construir la visualización utilizaremos el paquete `ggplot2` y la **gramática de gráficos en capas**, abordando secuencialmente:
+
+::: {.incremental}
+1. **Datos, mapeo y capas**: geometría `geom_col()` y simetría bilateral con `ifelse()`.
+2. **Facetas**: división en 4 paneles temporales con `facet_wrap()`.
+3. **Escalas**: ajuste de marcas numéricas, formato porcentual positivo sin signo negativo y capitalización de leyendas.
+4. **Tema**: reubicación estratégica de la leyenda para optimizar el espacio horizontal.
+:::
+
+## Datos, mapeo y capas {.smaller .center}
+
+### Mapeo inicial apilado
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-2|4-11|12-14|"
+# Cargar paquetes ----
+library(scales)
+
+# Visualización ----
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = poblacion_pct,
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero)
+  )
+```
+
+::: {.fragment}
+Ambos géneros parten desde $0$ y se extienden a la derecha (`position = "stack"`), sin reflejar la bilateralidad característica de una pirámide.
+:::
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 5
+#| fig-align: center
+#| lightbox: true
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = poblacion_pct,
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero)
+  )
+```
+:::
+
+::::
+
+## Datos, mapeo y capas {.smaller .center}
+
+### Simetría bilateral con `ifelse()`
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|4-8|11-15|"
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  )
+```
+
+::: {.fragment}
+Invertir el signo de las mujeres (`-poblacion_pct`) proyecta sus barras a la izquierda del origen $0$, generando la silueta bilateral.
+:::
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 5
+#| fig-align: center
+#| lightbox: true
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  )
+```
+:::
+
+::::
+
+## Facetas {.smaller .center}
+
+### División por año con `facet_wrap()`
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|16-18|"
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  )
+```
+
+::: {.fragment}
+::: {style="font-size: 75%;"}
+`facet_wrap(facets = vars(ano))` crea un panel independiente para cada año (2018, 2035, 2052 y 2070), evitando la superposición de datos.
+:::
+:::
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 5
+#| fig-align: center
+#| lightbox: true
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  )
+```
+:::
+
+::::
+
+## Escalas {.smaller .center}
+
+::: {.incremental}
+- Aspectos a ajustar en las escalas:
+  1. **Valores positivos en porcentaje**: el eje horizontal muestra valores negativos (p. ej. `-0.025`). Definimos marcas con `poblacion_pct_breaks <- seq.int(-0.04, 0.04, 0.01)`.
+  2. **Función anónima**: `\(x) label_percent(accuracy = 1)(abs(x))` aplica el valor absoluto `abs()` y formatea en porcentaje entero (`4%`).
+  3. **Capitalización de leyendas**: `scale_fill_discrete(labels = str_to_title)` convierte `"hombres"` $\rightarrow$ `"Hombres"` y `"mujeres"` $\rightarrow$ `"Mujeres"`.
+  4. **Textos informativos**: con `labs()`, títulos descriptivos, fecha de corte y fuente oficial, suprimiendo etiquetas redundantes en los ejes (`NULL`).
+:::
+
+## Escalas {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-6|8|10-27|28-31|32-34|35-42|"
+# Variables auxiliares ----
+poblacion_pct_breaks <- seq.int(
+  from = -0.04,
+  to = 0.04,
+  by = 0.01
+)
+
+actualizacion_fecha <- ymd("2025-07-18")
+
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  ) +
+  scale_x_continuous(
+    breaks = poblacion_pct_breaks,
+    labels = \(x) label_percent(accuracy = 1)(abs(x))
+  ) +
+  scale_fill_discrete(
+    labels = str_to_title
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL,
+    title = "Pirámides poblacionales de Colombia",
+    subtitle = str_glue("Actualización: {actualizacion_fecha}"),
+    caption = "Fuente: Dane - Proyecciones de Población y Estudios Demográficos (PPED)"
+  )
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 5
+#| fig-align: center
+#| lightbox: true
+poblacion_pct_breaks <- seq.int(
+  from = -0.04,
+  to = 0.04,
+  by = 0.01
+)
+
+actualizacion_fecha <- ymd("2025-07-18")
+
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  ) +
+  scale_x_continuous(
+    breaks = poblacion_pct_breaks,
+    labels = \(x) label_percent(accuracy = 1)(abs(x))
+  ) +
+  scale_fill_discrete(
+    labels = str_to_title
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL,
+    title = "Pirámides poblacionales de Colombia",
+    subtitle = str_glue("Actualización: {actualizacion_fecha}"),
+    caption = "Fuente: Dane - Proyecciones de Población y Estudios Demográficos (PPED)"
+  )
+```
+:::
+
+::::
+
+## Tema {.smaller .center}
+
+::: {.incremental}
+- Por defecto, `ggplot2` sitúa la leyenda en la parte lateral derecha, comprimiendo el espacio horizontal disponible para los paneles facetados.
+- Con `theme(legend.position = "bottom")`, trasladamos la leyenda a la parte inferior otorgando máxima amplitud y legibilidad a las barras.
+- **Conclusiones demográficas observables**:
+  - En **2018**, la pirámide presenta una base más amplia propia de una estructura poblacional relativamente joven.
+  - Hacia **2070**, se evidencia una contracción marcada de la base (menor natalidad) y un ensanchamiento superior (envejecimiento poblacional sostenido).
+:::
+
+## Tema {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-33|34-36|"
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  ) +
+  scale_x_continuous(
+    breaks = poblacion_pct_breaks,
+    labels = \(x) label_percent(accuracy = 1)(abs(x))
+  ) +
+  scale_fill_discrete(
+    labels = str_to_title
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL,
+    title = "Pirámides poblacionales de Colombia",
+    subtitle = str_glue("Actualización: {actualizacion_fecha}"),
+    caption = "Fuente: Dane - Proyecciones de Población y Estudios Demográficos (PPED)"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+
+::: {.column width="52%"}
+```{r}
+#| echo: false
+#| fig-height: 5.2
+#| fig-align: center
+#| lightbox: true
+poblacion_col_filtrar |>
+  ggplot(
+    aes(
+      x = ifelse(
+        test = genero == "hombres",
+        yes = poblacion_pct,
+        no = -poblacion_pct
+      ),
+      y = rango_edad
+    )
+  ) +
+  geom_col(
+    aes(fill = genero),
+    color = "black"
+  ) +
+  facet_wrap(
+    facets = vars(ano)
+  ) +
+  scale_x_continuous(
+    breaks = poblacion_pct_breaks,
+    labels = \(x) label_percent(accuracy = 1)(abs(x))
+  ) +
+  scale_fill_discrete(
+    labels = str_to_title
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL,
+    title = "Pirámides poblacionales de Colombia",
+    subtitle = str_glue("Actualización: {actualizacion_fecha}"),
+    caption = "Fuente: Dane - Proyecciones de Población y Estudios Demográficos (PPED)"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+:::
+
+::::
+
+## {.center}
+
+::: {.incremental}
+- **Conclusiones demográficas observables**:
+  - En **2018**, la pirámide presenta una base más amplia propia de una estructura poblacional relativamente joven.
+  - Hacia **2070**, se evidencia una contracción marcada de la base (menor natalidad) y un ensanchamiento superior (envejecimiento poblacional sostenido).
+:::
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
