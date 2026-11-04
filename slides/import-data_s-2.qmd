@@ -46,6 +46,10 @@ library(sf)
 
     - Crear archivo `001_importar-datos-formato-gpkg.R`
 
+- Instalar paquetes:
+
+  - `install.packages("janitor")`
+
 - Descargar datos:
 
   - `nivel-departamento_version-mgn-2025_geopackage.gpkg`
