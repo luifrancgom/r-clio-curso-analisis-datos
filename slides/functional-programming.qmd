@@ -1,0 +1,1249 @@
+---
+title: Programación funcional
+subtitle: Sesión 1
+author:
+  - name: 
+      given: Luis F.
+      family: Gomez L.
+    orcid: 0000-0002-6805-1045
+    email: luis.gomezl@unimilitar.edu.co
+    affiliations:
+      - name: Facultad de Estudios a Distancia
+toc: true
+toc-depth: 1
+slide-level: 2
+format:
+  presentation-umng-revealjs:
+    logo-vertical-strip: ../images/logos/logo-white-vertical.png
+    embed-resources: true
+    reference-location: document
+date: last-modified
+date-format: iso
+lang: es
+bibliography: ../references/r-clio.bib
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+library(tidyverse)
+library(fs)
+```
+
+# Preliminares
+
+## {.smaller .center}
+
+::: {.incremental}
+- Verificar: 
+
+  - ¿La carpeta `data` fue creada?
+  - ¿El archivo `2021-saber_pro-genericas.txt.xz` fue incluido en `data`?
+
+- Generar carpetas:
+
+  - `019_funciones-anonimas-purrr-en-r`
+
+    - Crear archivo `001_funciones-anonimas-purrr.R`
+
+  - `020_funciones-map-reduce-list-rbind-en-r`
+
+    - Crear archivo `001_funciones-map-reduce-list-rbind.R`
+
+- Descargar datos: 
+
+  - `2022-saber_pro-genericas.txt.xz`
+  - `2023-saber_pro-genericas.txt.xz`
+  - `2024-saber_pro-genericas.txt.xz`
+
+     - Agregar en `data`
+:::
+
+# Funciones anónimas y `purrr`
+
+## `purrr` {.smaller .center}
+
+::: {.incremental}
+- Paquete del `tidyverse` diseñado para facilitar la **programación funcional** en R [@wickham_r_2023, Cap. 26].
+- Sustituye los bucles imperativos (`for`, `while`) por **funcionales** (funciones de orden superior que reciben funciones como argumentos) [@wickham_advanced_2019, Cap. 9].
+- Permite expresar directamente **qué** transformación aplicar a cada elemento en vez de gestionar **cómo** controlar los índices y la inicialización de variables.
+- Conduce a un código más conciso, legible, expresivo y fácil de depurar.
+:::
+
+## Vectores {.smaller .center}
+
+::: {.incremental}
+- Estructura de datos más básica e importante en R [@wickham_advanced_2019, Cap. 3], clasificada en:
+  - **Vectores atómicos**: unidimensionales y homogéneos (`logical`, `integer`, `double`, `character`). Si se combinan tipos con `c()`, R aplica coerción implícita.
+  - **Listas**: unidimensionales y heterogéneas. Cada elemento puede ser de distinto tipo y longitud (vectores, funciones, tablas `tibble`).
+- **Comportamiento clave con tablas de datos:**
+  - `list(tibble(...), tibble(...))` conserva cada tabla independiente (`[[1]]` y `[[2]]`).
+  - `c(tibble(...), tibble(...))` descompone y aplana las columnas perdiendo la identidad tabular.
+:::
+
+## `list()` vs. `c()` con `tibble`s {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="50%"}
+**`list()`: preserva la estructura tabular**
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+list(
+  tibble(x = "a", y = "b"),
+  tibble(y = "c", z = "d")
+)
+```
+:::
+
+::::
+
+:::: {.column width="50%"}
+**`c()`: aplana y descompone en columnas**
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+c(
+  tibble(x = "a", y = "b"),
+  tibble(y = "c", z = "d")
+)
+```
+:::
+
+::::
+
+:::::
+
+## Funciones {.smaller .center}
+
+![Estructura de una función en R [@grolemund_hands-programming_2014, Cap. 1]](../images/function_structure.png){.lightbox #fig-function-structure height="230px"}
+
+::: {.incremental}
+- **Nombre**: identificador asignado con `<-` para almacenarla en el entorno.
+- **Parámetros y argumentos**: variables declaradas en `function(...)` y argumentos por defecto.
+- **Cuerpo (`{ ... }`) y salida**: bloque de instrucciones; R retorna automáticamente la última expresión evaluada.
+:::
+
+## `lanzar_moneda()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="55%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+# Función completa parametrizada ----
+lanzar_moneda <- function(
+  n_lanzamientos = 1,
+  lados = c("cara", "cruz")
+) {
+  # Variable auxiliar
+  con_reemplazo <- TRUE
+
+  lanzamientos <- sample(
+    x = lados,
+    size = n_lanzamientos,
+    replace = con_reemplazo
+  )
+
+  # Salida
+  lanzamientos
+}
+```
+:::
+
+::::
+
+:::: {.column width="45%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+# Con argumentos por defecto ----
+lanzar_moneda()
+
+# Especificando argumentos ----
+lanzar_moneda(n_lanzamientos = 5)
+```
+:::
+
+::::
+
+:::::
+
+## Funciones anónimas {.smaller .center}
+
+::: {.incremental}
+- Funciones que no tienen un nombre asignado con `<-` (lambdas) [@wickham_advanced_2019, Cap. 9].
+- Ideales para transformaciones breves de un solo uso dentro de funcionales de `purrr`, evitando sobrecargar el entorno global con funciones intermedias.
+- **Sintaxis nativa** (a partir de R `4.1.0`):
+
+  ```r
+  \(x) { ... } # Equivalente a function(x) { ... }
+  ```
+
+- Existen únicamente en el contexto de la expresión donde se evalúan (p. ej. pasadas al argumento `.f` en `map()`).
+:::
+
+## `\(x) { ... }` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="50%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+#| eval: false
+# Función anónima nativa ----
+\(x) {
+  sample(
+    x = c("cara", "cruz"),
+    size = x,
+    replace = TRUE
+  )
+}
+```
+:::
+
+::::
+
+:::: {.column width="50%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+# Invocación inmediata ----
+(\(x) {
+  sample(
+    x = c("cara", "cruz"),
+    size = x,
+    replace = TRUE
+  )
+})(3)
+```
+:::
+
+::::
+
+:::::
+
+## `map()` {.smaller .center}
+
+![Representación gráfica de la función `map()` [@wickham_r_2023, Cap. 26]](../images/map.png){.lightbox #fig-map height="220px"}
+
+::: {.incremental}
+- **Propósito**: transforma un vector aplicando una función individual a cada uno de sus elementos.
+- **Argumentos**: `.x` (vector atómico o lista a iterar) y `.f` (función nombrada o anónima `\(x)`).
+- **Resultado**: **siempre retorna una lista** con la misma longitud que el vector `.x`.
+:::
+
+## `map()` con función nombrada y anónima {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="50%"}
+**Con función nombrada (`lanzar_moneda`)**
+
+::: {style="font-size: 70%;"}
+```{r}
+#| echo: true
+# Iteración con función nombrada ----
+map(
+  .x = 1:3,
+  .f = lanzar_moneda
+)
+```
+:::
+
+::::
+
+:::: {.column width="50%"}
+**Con función anónima (`\(x) { ... }`)**
+
+::: {style="font-size: 70%;"}
+```{r}
+#| echo: true
+# Iteración con función anónima ----
+map(
+  .x = 1:3,
+  .f = \(x) {
+    sample(
+      x = c("cara", "cruz"),
+      size = x,
+      replace = TRUE
+    )
+  }
+)
+```
+:::
+
+::::
+
+:::::
+
+## `reduce()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="45%"}
+![Representación gráfica de la función `reduce()` [@wickham_r_2023, Cap. 26]](../images/reduce.png){.lightbox #fig-reduce height="330px"}
+:::
+
+::: {.column width="55%"}
+::: {.incremental}
+- **Propósito**: combina progresivamente los elementos de una colección hasta consolidar un **único valor**.
+- **Argumentos**: `.x` (vector o lista) y `.f` (**función binaria** de dos entradas, p. ej. `intersect()`, `+`).
+- **Mecanismo**: acumulativo y secuencial:
+  $f(a, b) \rightarrow f(\text{resultado}, c) \rightarrow \dots$
+:::
+:::
+
+::::
+
+## `reduce()` con `intersect()` {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="50%"}
+
+::: {.incremental}
+- **Intersección múltiple**:
+  - `intersect()` de R base solo compara **dos** vectores a la vez.
+  - `reduce()` permite extenderla a cualquier cantidad de conjuntos en una lista.
+- **Paso a paso acumulativo**:
+  1. $f(\text{conjunto 1}, \text{conjunto 2})$:
+     `intersect(c("A","B","C"), c("B","C","D"))` $\rightarrow$ `c("B", "C")`
+  2. $f(\text{resultado}, \text{conjunto 3})$:
+     `intersect(c("B","C"), c("C","D","E"))` $\rightarrow$ `"C"`
+:::
+
+::::
+
+:::: {.column width="50%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+# Lista de conjuntos ----
+conjuntos <- list(
+  c("A", "B", "C"),
+  c("B", "C", "D"),
+  c("C", "D", "E")
+)
+
+# Intersección acumulativa ----
+reduce(
+  .x = conjuntos,
+  .f = intersect
+)
+```
+:::
+
+::::
+
+:::::
+
+## `list_rbind()` {.smaller .center}
+
+![Representación gráfica de la función `list_rbind()` [@wickham_r_2023, Cap. 26]](../images/list_rbind.png){.lightbox #fig-list-rbind height="220px"}
+
+::: {.incremental}
+- **Propósito**: apila verticalmente por filas una lista de `tibble`s en una única tabla rectangular.
+- **Alineación por nombres**: une columnas coincidentes y preserva las no compartidas imputando `NA`.
+- **Flujo en análisis**: clave tras importar múltiples archivos con `map()` para unificarlos en un solo conjunto.
+:::
+
+## `list_rbind()` con `tibble`s {.smaller .center}
+
+::::: {.columns}
+
+:::: {.column width="50%"}
+
+::: {.incremental}
+- **Consolidación rectangular**:
+  - Al procesar múltiples archivos con `map()`, el resultado es una **lista** de tablas individuales.
+  - `list_rbind()` las reúne en un único `tibble` consolidado.
+- **Alineación por nombres**:
+  - Columna común `y`: se concatena verticalmente.
+  - Columnas `x` y `z`: se conservan e imputa `NA` donde no existían.
+:::
+
+::::
+
+:::: {.column width="50%"}
+
+::: {style="font-size: 80%;"}
+```{r}
+#| echo: true
+# Lista de tablas con columnas parcialmente coincidentes ----
+tablas_datos <- list(
+  tibble(x = "a", y = "b"),
+  tibble(y = "c", z = "d")
+)
+
+# Unión por filas ----
+list_rbind(tablas_datos)
+```
+:::
+
+::::
+
+:::::
+
+# Funciones `map()`, `reduce()` y `list_rbind()`
+
+## Exploración del sistema de archivos con `fs` {.smaller .center}
+
+::: {.incremental}
+- Al trabajar con **datos históricos**, la información suele encontrarse fragmentada en múltiples archivos dentro de un mismo directorio (p. ej. un archivo por año o periodo) [@wickham_r_2023, Cap. 26].
+- El paquete **`fs`** ofrece una interfaz homogénea, consistente e independiente del sistema operativo para gestionar rutas y archivos, integrándose naturalmente con el operador `|>` y el `tidyverse`.
+:::
+
+## Exploración del sistema de archivos con `fs` {.smaller .center}
+
+::: {.incremental}
+- La función **`dir_ls()`** permite listar los contenidos aplicando criterios de filtrado:
+  - **`path`**: ruta del directorio a explorar (`"data/"`).
+  - **`type = "file"`**: restringe la búsqueda exclusivamente a archivos, descartando subcarpetas.
+  - **`glob = "*.txt.xz$"`**: patrón comodín (*wildcard*):
+    - `*`: comodín para representar cualquier secuencia de caracteres (p. ej. `2021-saber_pro-genericas`).
+    - `.txt.xz`: extensión compuesta de texto plano comprimido.
+    - `$`: ancla la búsqueda garantizando que termine con esa extensión exacta.
+:::
+
+## Identificación de rutas de archivos con `dir_ls()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-3|5-10|12|"
+# Cargar paquetes ----
+library(tidyverse)
+library(fs)
+
+# Rutas ----
+paths <- dir_ls(
+  path = "data/",
+  type = "file",
+  glob = "*.txt.xz$"
+)
+
+paths
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Rutas ----
+paths <- dir_ls(
+  path = "../data/",
+  type = "file",
+  glob = "*.txt.xz$"
+)
+
+paths
+```
+:::
+:::
+
+::::
+
+## Importación inicial con `map()` {.smaller .center}
+
+::: {.incremental}
+- Con el vector de rutas `paths`, se realiza una importación iterativa aplicando **`map()`** junto con una **función anónima** `\(x)`.
+- Como los microdatos del ICFES utilizan el punto y coma (`;`) como delimitador, la función adecuada de lectura es **`read_csv2()`**.
+- El resultado es una **lista con 4 tibbles** correspondientes a 2021, 2022, 2023 y 2024.
+- **Discrepancia en columnas**:
+  - Al inspeccionar las tablas se evidencia que no todas contienen el mismo número de variables:
+    - **2021**: 95 variables.
+    - **2022**: 100 variables.
+    - **2023**: 96 variables.
+    - **2024**: 90 variables.
+:::
+
+## Importación inicial con `map()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-9|3-9|4-8|11-15|"
+# Importación inicial ----
+saber_pro_genericas_2021_2024 <- paths |>
+  map(
+    .f = \(x) {
+      read_csv2(
+        file = x
+      )
+    }
+  )
+
+# Número de columnas por archivo ----
+saber_pro_genericas_2021_2024 |>
+  map(
+    .f = ncol
+  )
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+#| message: false
+# Importación inicial ----
+saber_pro_genericas_2021_2024 <- paths |>
+  map(
+    .f = \(x) {
+      read_csv2(
+        file = x
+      )
+    }
+  )
+
+# Número de columnas por archivo ----
+saber_pro_genericas_2021_2024 |>
+  map(
+    .f = ncol
+  )
+```
+:::
+:::
+
+::::
+
+## Identificación de variables comunes {.smaller .center}
+
+::: {.incremental}
+- Para unificar estas tablas en una sola estructura rectangular homogénea, es indispensable identificar cuáles columnas están presentes en la **totalidad de los archivos anuales**.
+- **Estrategia con programación funcional**:
+  1. Extraer los nombres de las variables de cada tabla aplicando `map()` con la función `names`:
+     $$\text{map}(.f = \text{names})$$
+  2. Aplicar la función binaria `intersect()` de forma acumulativa sobre la lista de nombres mediante `reduce()`:
+     $$\text{reduce}(.f = \text{intersect})$$
+- Como resultado de la evaluación, se obtiene el vector `variables_completas` que contiene las **82 variables comunes** a los 4 años.
+:::
+
+## Variables comunes con `map()` y `reduce()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-8|2-5|6-8|10|"
+# Identificación variables completas ----
+variables_completas <- saber_pro_genericas_2021_2024 |>
+  map(
+    .f = names
+  ) |>
+  reduce(
+    .f = intersect
+  )
+
+variables_completas
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Identificación variables completas ----
+variables_completas <- saber_pro_genericas_2021_2024 |>
+  map(
+    .f = names
+  ) |>
+  reduce(
+    .f = intersect
+  )
+
+head(variables_completas, 10)
+```
+:::
+:::
+
+::::
+
+## Selección estricta con `all_of()` {.smaller .center}
+
+::: {.incremental}
+- Al reimportar mediante `col_select = all_of(variables_completas)`, la función auxiliar **`all_of()`** cumple 2 propósitos fundamentales:
+  - **Resolución explícita de variables de entorno**:
+    - Cuando se suministra un vector de caracteres definido en el entorno de trabajo como `variables_completas`, envolverlo en `all_of()` le indica a R de forma inequívoca que debe evaluar su contenido como los nombres de las columnas.
+  - **Validación estricta de columnas**:
+    - `all_of()` exige que **todas** las columnas especificadas en el vector existan en el archivo; si falta alguna, interrumpe la ejecución con error.
+:::
+
+## Diagnóstico y ajuste de tipos de columnas {.smaller .center}
+
+::: {.incremental}
+- Al examinar las especificaciones inferidas por `readr` mediante `spec()`, se identifican variables que requieren ajuste explícito:
+  1. **`periodo`**: inferida como numérica continua (`col_double()`), pero corresponde a un código cronológico compuesto (ej. `"20212"`) que debe dividirse posteriormente $\rightarrow$ `col_character()`.
+  2. **Códigos geográficos e institucionales** (`estu_cod_depto_presentacion`, `estu_cod_mcpio_presentacion`, `estu_inst_codmunicipio`, `estu_prgm_codmunicipio`): inferidos como `col_double()`, lo que causa la pérdida de ceros a la izquierda (ej. `"05"` de Antioquia pasa a `5`) alterando el estándar DIVIPOLA $\rightarrow$ `col_character()`.
+:::
+
+
+## Diagnóstico y ajuste de tipos de columnas {.smaller .center}
+
+::: {.incremental}
+  3. **`estu_fechanacimiento`**: fechas en formato día/mes/año (`DD/MM/AAAA`) $\rightarrow$ `col_date(format = "%d/%m/%Y")`.
+  4. **`estu_snies_prgmacademico` e `inst_cod_institucion`**: identificadores discretos $\rightarrow$ `col_integer()`.
+- La función **`cols()`** de `readr` permite sobreescribir únicamente estas 8 columnas, dejando inferir automáticamente las 74 restantes.
+:::
+
+## Importación y verificación {.smaller}
+
+:::: {.columns}
+::: {.column width="60%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-20|4-19|17|22-26|"
+# Ajuste especificación variables ----
+saber_pro_genericas_2021_2024 <- paths |>
+  map(
+    .f = \(x) {
+      read_csv2(
+        file = x,
+        col_types = cols(
+          periodo = col_character(),
+          estu_cod_depto_presentacion = col_character(),
+          estu_cod_mcpio_presentacion = col_character(),
+          estu_fechanacimiento = col_date(format = "%d/%m/%Y"),
+          estu_inst_codmunicipio = col_character(),
+          estu_prgm_codmunicipio = col_character(),
+          estu_snies_prgmacademico = col_integer(),
+          inst_cod_institucion = col_integer()
+        ),
+        col_select = all_of(variables_completas)
+      )
+    }
+  )
+
+# Chequeo problemas ----
+saber_pro_genericas_2021_2024 |>
+  map(
+    .f = problems
+  )
+```
+:::
+::: {.column width="40%"}
+::: {style="font-size: 65%;"}
+```{r}
+#| message: false
+# Ajuste especificación variables ----
+saber_pro_genericas_2021_2024 <- paths |>
+  map(
+    .f = \(x) {
+      read_csv2(
+        file = x,
+        col_types = cols(
+          periodo = col_character(),
+          estu_cod_depto_presentacion = col_character(),
+          estu_cod_mcpio_presentacion = col_character(),
+          estu_fechanacimiento = col_date(format = "%d/%m/%Y"),
+          estu_inst_codmunicipio = col_character(),
+          estu_prgm_codmunicipio = col_character(),
+          estu_snies_prgmacademico = col_integer(),
+          inst_cod_institucion = col_integer()
+        ),
+        col_select = all_of(variables_completas)
+      )
+    }
+  )
+
+# Chequeo problemas ----
+saber_pro_genericas_2021_2024 |>
+  map(
+    .f = problems
+  )
+```
+:::
+:::
+::::
+
+## Unión por filas con `list_rbind()` {.smaller .center}
+
+::: {.incremental}
+- Con los 4 archivos importados bajo la misma estructura (82 columnas comunes y tipos de datos normalizados), el objeto `saber_pro_genericas_2021_2024` consiste en una lista con 4 tablas independientes.
+- Para realizar análisis consolidados sobre el periodo 2021-2024, se concatenan verticalmente todas las filas en un único conjunto de datos rectangular.
+- La función **`list_rbind()`** del paquete `purrr`:
+  - Recibe la lista de tibbles y apila sus filas en una sola tabla.
+  - La totalidad de observaciones correspondientes a los 4 años quedan consolidadas en una única tibble de 82 columnas.
+:::
+
+## Consolidación con `list_rbind()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-3|5|"
+# Unión filas ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  list_rbind()
+
+saber_pro_genericas_2021_2024
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Unión filas ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  list_rbind()
+
+saber_pro_genericas_2021_2024
+```
+:::
+:::
+
+::::
+
+## Separación de la columna `periodo` {.smaller .center}
+
+::: {.incremental}
+- En la tabla consolidada, la variable `periodo` almacena códigos de 5 dígitos (ej. `"20212"`, `"20224"`, `"20231"`, `"20241"`):
+  - Los **primeros 4 dígitos** corresponden al año del examen.
+  - El **último dígito** indica la convocatoria semestral respectiva.
+- Al encontrarse fusionadas en una sola cadena, se dificulta realizar agrupaciones o filtros temporales independientes por año o por periodo.
+- Se emplea **`separate_wider_position()`** del paquete `tidyr` para dividir esta variable a partir de anchos fijos de posición:
+  - `ano = 4`: 4 caracteres para el año.
+  - `periodo = 1`: 1 carácter para el semestre.
+:::
+
+## Separación con `separate_wider_position()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="65%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-6|8-9|"
+# Separación periodo ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  separate_wider_position(
+    cols = periodo,
+    width = c(ano = 4, periodo = 1)
+  )
+
+saber_pro_genericas_2021_2024 |>
+  select(ano, periodo, estu_consecutivo)
+```
+:::
+
+::: {.column width="35%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Separación periodo ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  separate_wider_position(
+    cols = periodo,
+    width = c(ano = 4, periodo = 1)
+  )
+
+saber_pro_genericas_2021_2024 |>
+  select(ano, periodo, estu_consecutivo)
+```
+:::
+:::
+
+::::
+
+## Diagnóstico de códigos DIVIPOLA {.smaller .center}
+
+::: {.incremental}
+- Según el estándar de codificación **DIVIPOLA** establecido por el DANE:
+  - Los códigos de departamento deben tener exactamente **2 dígitos** (ej. `"05"` para Antioquia u `"11"` para Bogotá D.C.).
+  - Los códigos de municipio deben poseer exactamente **5 dígitos** (ej. `"05001"` para Medellín u `"11001"` para Bogotá D.C.).
+- Al consultar la longitud en caracteres con `str_length()` (`stringr`) y `count()` (`dplyr`):
+  - Se identifican departamentos con longitud 1 (en vez de 2).
+  - Se identifican municipios con longitud 4 (en vez de 5).
+- Esta anomalía obedece a la pérdida del cero a la izquierda (ej. `"05"` registrado erróneamente como `5` y `"05001"` como `5001`).
+:::
+
+## Diagnóstico con `str_length()` y `count()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Conteo de caracteres en departamentos ----
+saber_pro_genericas_2021_2024 |>
+  count(n_depto = str_length(estu_cod_depto_presentacion))
+
+# Conteo de caracteres en municipios ----
+saber_pro_genericas_2021_2024 |>
+  count(n_mcpio_pres = str_length(estu_cod_mcpio_presentacion))
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Conteo de caracteres en departamentos ----
+saber_pro_genericas_2021_2024 |>
+  count(n_depto = str_length(estu_cod_depto_presentacion))
+
+# Conteo de caracteres en municipios ----
+saber_pro_genericas_2021_2024 |>
+  count(n_mcpio_pres = str_length(estu_cod_mcpio_presentacion))
+```
+:::
+:::
+
+::::
+
+## Relleno de texto con `str_pad()` {.smaller .center}
+
+::: {.incremental}
+- El término **padding** (*relleno*) hace referencia a la acción de añadir caracteres a una cadena hasta alcanzar una longitud o ancho total deseado. Si la cadena ya cuenta con dicha longitud o la supera, `str_pad()` la deja inalterada.
+- Argumentos clave de **`str_pad()`** (`stringr`):
+  - **`string`**: vector o columna de texto que se desea rellenar.
+  - **`width`**: ancho total mínimo deseado (`2` para departamento, `5` para municipio).
+  - **`side`**: extremo donde se insertará el relleno:
+    - `"left"`: antepone caracteres a la izquierda (restituye ceros a la izquierda: `"5"` $\rightarrow$ `"05"`, `"5001"` $\rightarrow$ `"05001"`).
+    - `"right"` / `"both"`: añade caracteres a la derecha o centra el texto.
+  - **`pad`**: carácter de relleno (usamos `pad = "0"`).
+:::
+
+## Corrección `str_pad()` y `across()` {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-10|11-27|"
+# Corregir códigos departamento y municipio ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  mutate(
+    estu_cod_depto_presentacion = str_pad(
+      string = estu_cod_depto_presentacion,
+      width = 2,
+      side = "left",
+      pad = "0"
+    )
+  ) |>
+  mutate(
+    across(
+      .cols = c(
+        estu_cod_mcpio_presentacion,
+        estu_inst_codmunicipio,
+        estu_prgm_codmunicipio
+      ),
+      .fns = \(x) {
+        str_pad(
+          string = x,
+          width = 5,
+          side = "left",
+          pad = "0"
+        )
+      }
+    )
+  )
+```
+:::
+
+::: {.column width="45%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Corregir códigos departamento y municipio ----
+saber_pro_genericas_2021_2024 <- saber_pro_genericas_2021_2024 |>
+  mutate(
+    estu_cod_depto_presentacion = str_pad(
+      string = estu_cod_depto_presentacion,
+      width = 2,
+      side = "left",
+      pad = "0"
+    )
+  ) |>
+  mutate(
+    across(
+      .cols = c(
+        estu_cod_mcpio_presentacion,
+        estu_inst_codmunicipio,
+        estu_prgm_codmunicipio
+      ),
+      .fns = \(x) {
+        str_pad(
+          string = x,
+          width = 5,
+          side = "left",
+          pad = "0"
+        )
+      }
+    )
+  )
+
+# Verificación de longitudes corregidas ----
+saber_pro_genericas_2021_2024 |>
+  count(n_depto_presentacion = str_length(estu_cod_depto_presentacion))
+
+saber_pro_genericas_2021_2024 |>
+  count(n_cod_mcpio_presentacion = str_length(estu_cod_mcpio_presentacion))
+
+saber_pro_genericas_2021_2024 |>
+  count(n_inst_codmunicipio = str_length(estu_inst_codmunicipio))
+
+saber_pro_genericas_2021_2024 |>
+  count(n_prgm_codmunicipio = str_length(estu_prgm_codmunicipio))
+```
+:::
+:::
+
+::::
+
+# Caso de estudio: consolidación de resultados Saber Pro para UMNG
+
+## Delimitación de la población UMNG {.smaller .center}
+
+::: {.incremental}
+- Con los datos normalizados a nivel nacional, delimitamos el subconjunto para los programas de pregrado de la **Universidad Militar Nueva Granada (UMNG)**:
+  1. **Estudiantes en el exterior**: cuando un estudiante presenta la prueba en el exterior (`estu_exterior == "SI"`), los códigos geográficos nacionales no aplican $\rightarrow$ se asigna `NA` a `estu_cod_depto_presentacion` y `estu_cod_mcpio_presentacion` mediante `replace_when()` y `across()`.
+  2. **Población agregada oficial**: `filter(estu_agregado == "S")` conserva únicamente a los estudiantes evaluados formalmente como parte de la población agregada institucional válida para indicadores de calidad.
+  3. **Filtro institucional UMNG**: `filter(inst_cod_institucion == 1117)` selecciona exclusivamente los registros de la UMNG, cuyo código SNIES oficial es `1117`.
+:::
+
+## Limpiar y filtrar datos UMNG {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="52%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|1-16|17|18|20|"
+# Limpiar y filtrar ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024 |>
+  mutate(
+    across(
+      .cols = c(
+        estu_cod_depto_presentacion,
+        estu_cod_mcpio_presentacion
+      ),
+      .fns = \(x) {
+        replace_when(
+          x = x,
+          estu_exterior == "SI" ~ NA
+        )
+      }
+    )
+  ) |>
+  filter(estu_agregado == "S") |>
+  filter(inst_cod_institucion == 1117)
+
+saber_pro_genericas_2021_2024_umng
+```
+:::
+
+::: {.column width="48%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Limpiar y filtrar ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024 |>
+  mutate(
+    across(
+      .cols = c(
+        estu_cod_depto_presentacion,
+        estu_cod_mcpio_presentacion
+      ),
+      .fns = \(x) {
+        replace_when(
+          x = x,
+          estu_exterior == "SI" ~ NA
+        )
+      }
+    )
+  ) |>
+  filter(estu_agregado == "S") |>
+  filter(inst_cod_institucion == 1117)
+
+saber_pro_genericas_2021_2024_umng
+```
+:::
+:::
+
+::::
+
+## Transformación a enteros y factores {.smaller .center}
+
+::: {.incremental}
+- Consiste en asociar el tipo de datos adecuado a cada variable mediante `mutate()` y `factor()`:
+  - **Variables cronológicas**: `ano` y `periodo` se transforman a números enteros con `as.integer()`.
+  - **Variable nominal**: `estu_genero` se codifica como factor no ordenado (`ordered = FALSE`).
+  - **Variables ordinales**: se convierten en factores ordenados (`ordered = TRUE`), especificando sus niveles mediante `levels`:
+    - `estu_semestrecursa`: semestres `"02"`, `"03"`, `"06"`, ... , `"11"`, `"12 o más"`.
+    - `fami_estratovivienda`: `"Sin Estrato"` a `"Estrato 6"`.
+    - `fami_educacionmadre` y `fami_educacionpadre`: escala educativa (12 niveles desde `"No sabe"` hasta `"Postgrado"`).
+    - `mod_ingles_desem`: niveles de desempeño (`"A1"`, `"A2"`, `"B1"`, `"B2"`).
+:::
+
+## Transformación de tipos de columna {.smaller}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|3-6|7-11|12-16|17-30|"
+# Transformar variables numéricas y nominales ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024_umng |>
+  mutate(
+    ano = as.integer(ano),
+    periodo = as.integer(periodo)
+  ) |>
+  mutate(
+    estu_genero = factor(
+      x = estu_genero,
+      ordered = FALSE
+    ),
+    estu_semestrecursa = factor(
+      x = estu_semestrecursa,
+      levels = c("02", "03", "06", "07", "08", "09", "10", "11", "12 o más"),
+      ordered = TRUE
+    ),
+    fami_estratovivienda = factor(
+      x = fami_estratovivienda,
+      levels = c(
+        "Sin Estrato",
+        "Estrato 1",
+        "Estrato 2",
+        "Estrato 3",
+        "Estrato 4",
+        "Estrato 5",
+        "Estrato 6"
+      ),
+      ordered = TRUE
+    )
+  )
+```
+:::
+
+::: {.column width="45%"}
+::: {style="font-size: 65%;"}
+```{r}
+# Transformar variables numéricas y nominales ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024_umng |>
+  mutate(
+    ano = as.integer(ano),
+    periodo = as.integer(periodo)
+  ) |>
+  mutate(
+    estu_genero = factor(
+      x = estu_genero,
+      ordered = FALSE
+    ),
+    estu_semestrecursa = factor(
+      x = estu_semestrecursa,
+      levels = c("02", "03", "06", "07", "08", "09", "10", "11", "12 o más"),
+      ordered = TRUE
+    ),
+    fami_estratovivienda = factor(
+      x = fami_estratovivienda,
+      levels = c(
+        "Sin Estrato",
+        "Estrato 1",
+        "Estrato 2",
+        "Estrato 3",
+        "Estrato 4",
+        "Estrato 5",
+        "Estrato 6"
+      ),
+      ordered = TRUE
+    )
+  )
+
+saber_pro_genericas_2021_2024_umng |>
+  select(ano, periodo, estu_genero, estu_semestrecursa, fami_estratovivienda)
+```
+:::
+:::
+
+::::
+
+## Transformación de tipos de columna {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+```{r}
+#| eval: false
+#| echo: true
+#| code-line-numbers: "|4-21|22-39|40-44|"
+# Transformar variables ordinales adicionales ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024_umng |>
+  mutate(
+    fami_educacionmadre = factor(
+      x = fami_educacionmadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionpadre = factor(
+      x = fami_educacionpadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    mod_ingles_desem = factor(
+      x = mod_ingles_desem,
+      levels = c("A1", "A2", "B1", "B2"),
+      ordered = TRUE
+    )
+  )
+```
+:::
+
+::: {.column width="45%"}
+::: {style="font-size: 65%;"}
+```{r}
+# Transformar variables ordinales adicionales ----
+saber_pro_genericas_2021_2024_umng <- saber_pro_genericas_2021_2024_umng |>
+  mutate(
+    fami_educacionmadre = factor(
+      x = fami_educacionmadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    fami_educacionpadre = factor(
+      x = fami_educacionpadre,
+      levels = c(
+        "No sabe",
+        "No Aplica",
+        "Ninguno",
+        "Primaria incompleta",
+        "Primaria completa",
+        "Secundaria (Bachillerato) incompleta",
+        "Secundaria (Bachillerato) completa",
+        "Técnica o tecnológica incompleta",
+        "Técnica o tecnológica completa",
+        "Educación profesional incompleta",
+        "Educación profesional completa",
+        "Postgrado"
+      ),
+      ordered = TRUE
+    ),
+    mod_ingles_desem = factor(
+      x = mod_ingles_desem,
+      levels = c("A1", "A2", "B1", "B2"),
+      ordered = TRUE
+    )
+  )
+
+saber_pro_genericas_2021_2024_umng |>
+  select(fami_educacionmadre, fami_educacionpadre, mod_ingles_desem)
+```
+:::
+:::
+
+::::
+
+## Exportación en formato `.rds` {.smaller .center}
+
+::: {.incremental}
+- Una vez culminado el procesamiento, la tabla depurada y estructurada contiene los registros de los estudiantes de la **Universidad Militar Nueva Granada** evaluados entre 2021 y 2024 (9.328 observaciones y 83 variables).
+- Para guardar esta información y poder utilizarla en análisis posteriores sin necesidad de repetir todo el flujo de importación y limpieza:
+  - Se exporta el objeto resultante en extensión **`.rds`** mediante la función **`write_rds()`** del paquete `readr`.
+  - El formato nativo binario `.rds` garantiza la preservación íntegra de tipos de datos, factores ordenados y atributos.
+:::
+
+## Exportación de datos consolidados {.smaller .center}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+#| eval: false
+#| echo: true
+# Exportar datos consolidados ----
+saber_pro_genericas_2021_2024_umng |>
+  write_rds(
+    file = "data/2021-2024_saber-pro-genericas_umng.rds"
+  )
+```
+:::
+
+::: {.column width="52%"}
+::: {style="font-size: 70%;"}
+```{r}
+# Exportar datos consolidados ----
+saber_pro_genericas_2021_2024_umng |>
+  write_rds(
+    file = "../data/2021-2024_saber-pro-genericas_umng.rds"
+  )
+
+# Estructura del conjunto final UMNG ----
+glimpse(saber_pro_genericas_2021_2024_umng)
+```
+:::
+:::
+
+::::
+
+
+
+## {background-image="../images/backgrounds/bird-umng-1.jpg"}
+
+::: {.r-fit-text}
+Gracias
+:::
+
+# Referencias {.unnumbered .smaller}
