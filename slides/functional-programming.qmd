@@ -730,7 +730,6 @@ saber_pro_genericas_2021_2024
 ## Separación con `separate_wider_position()` {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="65%"}
 ```{r}
 #| eval: false
@@ -763,7 +762,6 @@ saber_pro_genericas_2021_2024 |>
 ```
 :::
 :::
-
 ::::
 
 ## Diagnóstico de códigos DIVIPOLA {.smaller .center}
@@ -781,7 +779,6 @@ saber_pro_genericas_2021_2024 |>
 ## Diagnóstico con `str_length()` y `count()` {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="48%"}
 ```{r}
 #| eval: false
@@ -809,7 +806,6 @@ saber_pro_genericas_2021_2024 |>
 ```
 :::
 :::
-
 ::::
 
 ## Relleno de texto con `str_pad()` {.smaller .center}
@@ -828,7 +824,6 @@ saber_pro_genericas_2021_2024 |>
 ## Corrección `str_pad()` y `across()` {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="55%"}
 ```{r}
 #| eval: false
@@ -910,7 +905,6 @@ saber_pro_genericas_2021_2024 |>
 ```
 :::
 :::
-
 ::::
 
 # Caso de estudio: consolidación de resultados Saber Pro para UMNG
@@ -927,7 +921,6 @@ saber_pro_genericas_2021_2024 |>
 ## Limpiar y filtrar datos UMNG {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="52%"}
 ```{r}
 #| eval: false
@@ -982,7 +975,6 @@ saber_pro_genericas_2021_2024_umng
 ```
 :::
 :::
-
 ::::
 
 ## Transformación a enteros y factores {.smaller .center}
@@ -1001,7 +993,6 @@ saber_pro_genericas_2021_2024_umng
 ## Transformación de tipos de columna {.smaller}
 
 :::: {.columns}
-
 ::: {.column width="55%"}
 ```{r}
 #| eval: false
@@ -1079,13 +1070,11 @@ saber_pro_genericas_2021_2024_umng |>
 ```
 :::
 :::
-
 ::::
 
 ## Transformación de tipos de columna {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="55%"}
 ```{r}
 #| eval: false
@@ -1193,7 +1182,6 @@ saber_pro_genericas_2021_2024_umng |>
 ```
 :::
 :::
-
 ::::
 
 ## Exportación en formato `.rds` {.smaller .center}
@@ -1208,7 +1196,6 @@ saber_pro_genericas_2021_2024_umng |>
 ## Exportación de datos consolidados {.smaller .center}
 
 :::: {.columns}
-
 ::: {.column width="48%"}
 ```{r}
 #| eval: false
@@ -1235,10 +1222,7 @@ glimpse(saber_pro_genericas_2021_2024_umng)
 ```
 :::
 :::
-
 ::::
-
-
 
 ## {background-image="../images/backgrounds/bird-umng-1.jpg"}
 
